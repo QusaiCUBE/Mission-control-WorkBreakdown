@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  background-color: #0F1117;
+  color: #E2E8F0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1D27;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2D3348;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3D4560;
+}
+
+/* View transition animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-enter {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Selection color */
+::selection {
+  background-color: #0984E340;
+}
+
+/* Smooth focus for inputs */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* Native date picker dark mode */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+}

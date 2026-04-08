@@ -1,0 +1,67 @@
+import { Module, Developer } from '../../types';
+import ProgressBar from '../shared/ProgressBar';
+import StatusBadge from '../shared/StatusBadge';
+import { getModuleProgress } from '../../utils/progress';
+import { isOverdue } from '../../utils/dates';
+
+interface DeveloperColumnProps {
+  developer: Developer;
+  modules: Module[];
+  onModuleClick: (moduleId: string) => void;
+}
+
+export default function DeveloperColumn({ developer, modules, onModuleClick }: DeveloperColumnProps) {
+  const doneCount = modules.filter((m) => m.status === 'done').length;
+
+  return (
+    <div className="flex-1 min-w-[300px]">
+      {/* Developer header */}
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+          style={{ backgroundColor: developer.color }}
+        >
+          {developer.name.slice(0, 2).toUpperCase()}
+        </div>
+        <div>
+          <h3 className="text-sm font-semibold text-white">{developer.name}</h3>
+          <p className="text-xs text-gray-500">
+            {modules.length} modules, {doneCount} done
+          </p>
+        </div>
+      </div>
+
+      {/* Module cards */}
+      <div className="space-y-2">
+        {modules.length === 0 ? (
+          <div className="p-4 border border-border-primary rounded-lg border-dashed text-center">
+            <p className="text-xs text-gray-500">No modules assigned</p>
+          </div>
+        ) : (
+          modules.map((module) => {
+            const progress = getModuleProgress(module);
+            const overdue = isOverdue(module.dueDate) && module.status !== 'done';
+
+            return (
+              <button
+                key={module.id}
+                onClick={() => onModuleClick(module.id)}
+                className="w-full p-3 bg-bg-secondary border border-border-primary rounded-lg hover:border-gray-500 transition-colors text-left"
+                style={{ borderLeftWidth: '3px', borderLeftColor: developer.color }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-white font-medium">{module.name}</span>
+                  <StatusBadge status={module.status} isOverdue={overdue} />
+                </div>
+                <ProgressBar value={progress} size="sm" color={developer.color} />
+                <span className="text-xs text-gray-500 mt-1 block">
+                  {module.description}
+                </span>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
