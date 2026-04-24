@@ -1,5 +1,7 @@
+import { useState, useCallback } from 'react';
 import { useProject } from './hooks/useProject';
 import { useViewState } from './hooks/useViewState';
+import LoginScreen from './components/auth/LoginScreen';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import SlideOver from './components/layout/SlideOver';
@@ -8,16 +10,36 @@ import BoardView from './components/board/BoardView';
 import TimelineView from './components/timeline/TimelineView';
 import WorkloadView from './components/workload/WorkloadView';
 import SettingsView from './components/settings/SettingsView';
+import IntegrationMapView from './components/map/IntegrationMapView';
 import ModuleDetail from './components/detail/ModuleDetail';
 import { getOverallProgress } from './utils/progress';
 import { daysBetween } from './utils/dates';
+import { getPermissions } from './utils/permissions';
+
+const AUTH_KEY = 'mc-auth-user';
 
 export default function App() {
+  const [user, setUser] = useState<string | null>(() => localStorage.getItem(AUTH_KEY));
   const projectHook = useProject();
   const { project } = projectHook;
   const viewState = useViewState();
   const { currentView, selectedModuleId, isDetailOpen } = viewState;
 
+  const handleLogin = useCallback((username: string) => {
+    localStorage.setItem(AUTH_KEY, username);
+    setUser(username);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem(AUTH_KEY);
+    setUser(null);
+  }, []);
+
+  if (!user) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
+
+  const perms = getPermissions(user);
   const overallProgress = getOverallProgress(project.modules);
   const phaseDurations = project.phases.map((p) =>
     Math.round((daysBetween(p.startDate, p.endDate) + 1) / 7)
@@ -26,17 +48,28 @@ export default function App() {
     ? project.modules.find((m) => m.id === selectedModuleId)
     : null;
 
+  // No-op handlers for restricted actions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const noopAny = (..._args: any[]) => {};
+
   return (
     <div className="min-h-screen bg-bg-primary text-gray-200">
-      <Sidebar currentView={currentView} onViewChange={viewState.setCurrentView} />
+      <Sidebar currentView={currentView} onViewChange={viewState.setCurrentView} hideSettings={!perms.canAccessSettings} />
 
       <div className="pl-16 lg:pl-56 transition-all duration-200">
-        <Header currentView={currentView} overallProgress={overallProgress} />
+        <Header currentView={currentView} overallProgress={overallProgress} user={user} onLogout={handleLogout} />
 
         <main className="p-6">
           <div key={currentView} className="view-enter">
           {currentView === 'dashboard' && (
-            <DashboardView project={project} onModuleClick={viewState.openModuleDetail} onUpdatePhase={projectHook.updatePhase} onAddPhase={projectHook.addPhase} onRemovePhase={projectHook.removePhase} />
+            <DashboardView
+              project={project}
+              onModuleClick={viewState.openModuleDetail}
+              onUpdatePhase={perms.canEditPhases ? projectHook.updatePhase : noopAny}
+              onAddPhase={perms.canAddPhases ? projectHook.addPhase : () => {}}
+              onRemovePhase={perms.canEditPhases ? projectHook.removePhase : noopAny}
+              readOnly={!perms.canEditPhases}
+            />
           )}
 
           {currentView === 'board' && (
@@ -44,9 +77,11 @@ export default function App() {
               modules={project.modules}
               developers={project.developers}
               phases={project.phases}
-              onMoveModule={projectHook.moveModule}
+              onMoveModule={perms.canMoveModules ? projectHook.moveModule : noopAny}
+              onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
               onModuleClick={viewState.openModuleDetail}
-              onAddModule={projectHook.addModule}
+              onAddModule={perms.canCreateModules ? projectHook.addModule : undefined}
+              readOnly={!perms.canMoveModules}
             />
           )}
 
@@ -57,8 +92,9 @@ export default function App() {
               phases={project.phases}
               projectStartDate={project.startDate}
               onModuleClick={viewState.openModuleDetail}
-              onUpdateDates={projectHook.updateModuleDates}
-              onReorderModules={projectHook.reorderModules}
+              onUpdateDates={perms.canEditDates ? projectHook.updateModuleDates : () => {}}
+              onReorderModules={perms.canEditModules ? projectHook.reorderModules : () => {}}
+              readOnly={!perms.canEditDates}
             />
           )}
 
@@ -69,11 +105,19 @@ export default function App() {
               phases={project.phases}
               projectStartDate={project.startDate}
               onModuleClick={viewState.openModuleDetail}
-              onAssignModule={projectHook.assignModule}
+              onAssignModule={perms.canAssign ? projectHook.assignModule : noopAny}
             />
           )}
 
-          {currentView === 'settings' && (
+          {currentView === 'map' && (
+            <IntegrationMapView
+              map={project.integrationMap}
+              onUpdateMap={perms.canEditModules ? projectHook.updateIntegrationMap : noopAny}
+              readOnly={!perms.canEditModules}
+            />
+          )}
+
+          {currentView === 'settings' && perms.canAccessSettings && (
             <SettingsView
               developers={project.developers}
               startDate={project.startDate}
@@ -86,6 +130,12 @@ export default function App() {
               onReset={projectHook.resetProject}
             />
           )}
+
+          {currentView === 'settings' && !perms.canAccessSettings && (
+            <div className="flex items-center justify-center h-[60vh]">
+              <p className="text-gray-500 text-lg">You don't have permission to access Settings</p>
+            </div>
+          )}
           </div>
         </main>
       </div>
@@ -96,14 +146,17 @@ export default function App() {
             module={selectedModule}
             developers={project.developers}
             onClose={viewState.closeModuleDetail}
-            onUpdateModule={projectHook.updateModule}
-            onAssignModule={projectHook.assignModule}
-            onUpdateNotes={projectHook.updateModuleNotes}
-            onUpdatePriority={projectHook.updateModulePriority}
-            onUpdateCompletedDate={projectHook.updateCompletedDate}
-            onAddDocument={projectHook.addDocument}
-            onUpdateDocument={projectHook.updateDocument}
-            onRemoveDocument={projectHook.removeDocument}
+            onUpdateModule={perms.canEditModules ? projectHook.updateModule : noopAny}
+            onAssignModule={perms.canAssign ? projectHook.assignModule : noopAny}
+            onUpdateNotes={perms.canEditNotes ? projectHook.updateModuleNotes : noopAny}
+            onUpdatePriority={perms.canEditModules ? projectHook.updateModulePriority : noopAny}
+            onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
+            onAddDocument={perms.canEditDocuments ? projectHook.addDocument : noopAny}
+            onUpdateDocument={perms.canEditDocuments ? projectHook.updateDocument : () => {}}
+            onRemoveDocument={perms.canEditDocuments ? projectHook.removeDocument : noopAny}
+            onAddAttachment={perms.canAttachFiles ? projectHook.addAttachment : noopAny}
+            onRemoveAttachment={perms.canAttachFiles ? projectHook.removeAttachment : noopAny}
+            readOnly={!perms.canEditModules}
           />
         )}
       </SlideOver>

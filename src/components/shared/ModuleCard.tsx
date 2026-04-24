@@ -67,11 +67,7 @@ export default function ModuleCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {module.status === 'done' && module.completedDate ? (
-            <span className="text-xs text-status-done">
-              Done {formatDate(module.completedDate)}
-            </span>
-          ) : module.dueDate ? (
+          {module.status !== 'done' && module.dueDate ? (
             <span className={`text-xs ${overdue ? 'text-status-overdue' : 'text-gray-500'}`}>
               Due {formatDate(module.dueDate)}
             </span>

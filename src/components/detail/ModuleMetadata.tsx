@@ -1,6 +1,5 @@
 import { Module, Developer, Priority } from '../../types';
 import DeveloperSelect from '../shared/DeveloperSelect';
-import DatePicker from '../shared/DatePicker';
 import { PRIORITY_LABELS } from '../../constants';
 import { formatDateFull } from '../../utils/dates';
 
@@ -9,7 +8,6 @@ interface ModuleMetadataProps {
   developers: [Developer, Developer];
   onAssign: (devId: string | null) => void;
   onUpdatePriority: (priority: Priority) => void;
-  onUpdateCompletedDate: (date: string | null) => void;
 }
 
 export default function ModuleMetadata({
@@ -17,7 +15,6 @@ export default function ModuleMetadata({
   developers,
   onAssign,
   onUpdatePriority,
-  onUpdateCompletedDate,
 }: ModuleMetadataProps) {
   return (
     <div className="space-y-4">
@@ -56,16 +53,6 @@ export default function ModuleMetadata({
         </div>
       )}
 
-      {/* Editable completion date — only shown for done modules */}
-      {module.status === 'done' && (
-        <div className="w-48">
-          <DatePicker
-            label="Completed On"
-            value={module.completedDate}
-            onChange={(d) => onUpdateCompletedDate(d || null)}
-          />
-        </div>
-      )}
 
       {module.dependencies.length > 0 && (
         <div className="text-xs text-gray-500">

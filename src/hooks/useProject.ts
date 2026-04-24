@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Project, Module, Phase, ModuleStatus, RequiredDocument } from '../types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, IntegrationMap } from '../types';
 import { createInitialProject, recreateProject } from '../data/initialData';
 import { saveProject, loadProject, clearProject, exportProject, importProject } from '../utils/storage';
+import { createDefaultERPMap } from '../data/erpMapData';
 import { getToday } from '../utils/dates';
 import { generateId } from '../utils/id';
+import { saveProjectToFirebase, onProjectChange } from '../utils/firebase';
 
 function normalizeProject(project: Project): Project {
   const today = getToday();
@@ -44,11 +46,20 @@ function normalizeProject(project: Project): Project {
     changed = true;
   }
 
-  // Migration: add documents array to modules that don't have it
+  // Migration: add documents and attachments arrays to modules that don't have them
   modules = modules.map((m) => {
-    if (!m.documents) {
+    let mod = m;
+    if (!mod.documents) { changed = true; mod = { ...mod, documents: [] }; }
+    if (!mod.attachments) { changed = true; mod = { ...mod, attachments: [] }; }
+    return mod;
+  });
+
+  // Migration: seed progress from status for modules missing the field
+  const progressSeed = { backlog: 0, in_progress: 33, in_review: 66, done: 100 } as const;
+  modules = modules.map((m) => {
+    if (typeof m.progress !== 'number') {
       changed = true;
-      return { ...m, documents: [] };
+      return { ...m, progress: progressSeed[m.status] };
     }
     return m;
   });
@@ -84,17 +95,50 @@ function normalizeProject(project: Project): Project {
     ? sortedPhases[0].startDate
     : project.startDate;
 
-  return changed ? { ...project, modules, startDate } : project;
+  // Migration: seed integrationMap with default ERP map if empty
+  let integrationMap = project.integrationMap || { nodes: [], connections: [] };
+  if (!project.integrationMap || !Array.isArray(integrationMap.nodes) || integrationMap.nodes.length === 0) {
+    integrationMap = createDefaultERPMap();
+    changed = true;
+  }
+
+  return changed ? { ...project, modules, startDate, integrationMap } : project;
 }
 
 export function useProject() {
-  const [project, setProject] = useState<Project>(() => {
-    const saved = loadProject();
-    return normalizeProject(saved ?? createInitialProject(getToday()));
-  });
+  const defaultProject = normalizeProject(loadProject() ?? createInitialProject(getToday()));
+  const [project, setProject] = useState<Project>(defaultProject);
+  const isRemoteUpdate = useRef(false);
+  const firebaseReady = useRef(false);
 
+  // Listen for Firebase — when it connects, use its data
+  useEffect(() => {
+    const unsubscribe = onProjectChange((remoteProject) => {
+      if (remoteProject) {
+        isRemoteUpdate.current = true;
+        const normalized = normalizeProject(remoteProject);
+        setProject(normalized);
+        saveProject(normalized);
+      }
+      // Mark Firebase as ready — now local changes can push
+      firebaseReady.current = true;
+    });
+    return unsubscribe;
+  }, []);
+
+  // Save locally always, but only push to Firebase AFTER first read
   useEffect(() => {
     saveProject(project);
+    // Don't push to Firebase if:
+    // - This is a remote update echoing back
+    // - Firebase hasn't done its initial read yet
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+    if (firebaseReady.current) {
+      saveProjectToFirebase(project);
+    }
   }, [project]);
 
   const addModule = useCallback((name: string, description: string, phase: string) => {
@@ -114,8 +158,10 @@ export function useProject() {
           dueDate: null,
           completedDate: null,
           priority: 'medium' as const,
+          progress: 0,
           tasks: [],
           documents: [],
+          attachments: [],
           notes: '',
           statusHistory: [],
           dependencies: [],
@@ -178,10 +224,15 @@ export function useProject() {
         const today = getToday();
         const movingToDone = newStatus === 'done';
         const movingFromDone = m.status === 'done' && newStatus !== 'done';
+        // Progress presets on backlog/done only; in_progress/in_review keep current value
+        // (the popover is what sets them).
+        let nextProgress = m.progress;
+        if (newStatus === 'backlog') nextProgress = 0;
+        else if (newStatus === 'done') nextProgress = 100;
         return {
           ...m,
           status: newStatus,
-          // Use due date as completion date if available, otherwise today
+          progress: nextProgress,
           completedDate: movingToDone ? (m.dueDate || today) : movingFromDone ? null : m.completedDate,
           tasks: m.tasks,
           statusHistory: [
@@ -190,6 +241,14 @@ export function useProject() {
           ],
         };
       }),
+    }));
+  }, []);
+
+  const updateModuleProgress = useCallback((moduleId: string, progress: number) => {
+    const clamped = Math.max(0, Math.min(100, Math.round(progress)));
+    setProject((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) => (m.id === moduleId ? { ...m, progress: clamped } : m)),
     }));
   }, []);
 
@@ -261,6 +320,24 @@ export function useProject() {
       ...prev,
       modules: prev.modules.map((m) =>
         m.id === moduleId ? { ...m, documents: m.documents.filter((d) => d.id !== docId) } : m
+      ),
+    }));
+  }, []);
+
+  const addAttachment = useCallback((moduleId: string, attachment: Attachment) => {
+    setProject((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId ? { ...m, attachments: [...m.attachments, attachment] } : m
+      ),
+    }));
+  }, []);
+
+  const removeAttachment = useCallback((moduleId: string, attachmentId: string) => {
+    setProject((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId ? { ...m, attachments: m.attachments.filter((a) => a.id !== attachmentId) } : m
       ),
     }));
   }, []);
@@ -358,6 +435,10 @@ export function useProject() {
     });
   }, []);
 
+  const updateIntegrationMap = useCallback((integrationMap: IntegrationMap) => {
+    setProject((prev) => ({ ...prev, integrationMap }));
+  }, []);
+
   const exportData = useCallback(() => {
     return exportProject(project);
   }, [project]);
@@ -377,6 +458,7 @@ export function useProject() {
     updateModuleDates,
     updateCompletedDate,
     updateModulePriority,
+    updateModuleProgress,
     updateStartDate,
     updatePhaseDurations,
     importData,
@@ -386,7 +468,10 @@ export function useProject() {
     addDocument,
     updateDocument,
     removeDocument,
+    addAttachment,
+    removeAttachment,
     reorderModules,
+    updateIntegrationMap,
     resetProject,
     exportData,
   };

@@ -11,6 +11,7 @@ interface TimelineViewProps {
   onModuleClick: (moduleId: string) => void;
   onUpdateDates: (moduleId: string, startDate: string | null, dueDate: string | null) => void;
   onReorderModules: (fromIndex: number, toIndex: number) => void;
+  readOnly?: boolean;
 }
 
 function friendlyDate(date: string): string {
@@ -26,6 +27,7 @@ export default function TimelineView({
   onModuleClick,
   onUpdateDates,
   onReorderModules,
+  readOnly: _readOnly,
 }: TimelineViewProps) {
   const [dayWidth, setDayWidth] = useState(30);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -166,8 +168,35 @@ export default function TimelineView({
           })}
         </div>
 
-        {/* Gantt chart area */}
-        <div ref={scrollRef} className="flex-1 overflow-x-auto">
+        {/* Gantt chart area — left-click drag to pan */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-x-auto"
+          style={{ cursor: 'grab' }}
+          onMouseDown={(e) => {
+            // Don't pan if clicking on a draggable bar (has cursor grab/col-resize)
+            const target = e.target as HTMLElement | SVGElement;
+            const style = window.getComputedStyle(target);
+            if (style.cursor === 'col-resize') return;
+            // Check if we're clicking inside the Gantt SVG area
+            const el = scrollRef.current;
+            if (!el) return;
+            e.preventDefault();
+            const startX = e.clientX;
+            const startScroll = el.scrollLeft;
+            el.style.cursor = 'grabbing';
+            const onMove = (ev: MouseEvent) => {
+              el.scrollLeft = startScroll - (ev.clientX - startX);
+            };
+            const onUp = () => {
+              el.style.cursor = 'grab';
+              window.removeEventListener('mousemove', onMove);
+              window.removeEventListener('mouseup', onUp);
+            };
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+          }}
+        >
           <GanttChart
             modules={modules}
             developers={developers}

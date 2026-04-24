@@ -4,9 +4,11 @@ import { VIEW_LABELS } from '../../constants';
 interface HeaderProps {
   currentView: ViewName;
   overallProgress: number;
+  user: string;
+  onLogout: () => void;
 }
 
-export default function Header({ currentView, overallProgress }: HeaderProps) {
+export default function Header({ currentView, overallProgress, user, onLogout }: HeaderProps) {
   return (
     <header className="h-14 bg-bg-secondary border-b border-border-primary flex items-center justify-between px-6">
       <div>
@@ -22,6 +24,15 @@ export default function Header({ currentView, overallProgress }: HeaderProps) {
             />
           </div>
           <span className="text-white font-medium">{overallProgress}%</span>
+        </div>
+        <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border-primary">
+          <span className="text-xs text-gray-400 capitalize">{user}</span>
+          <button
+            onClick={onLogout}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Logout
+          </button>
         </div>
       </div>
     </header>

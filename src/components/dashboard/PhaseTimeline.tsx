@@ -8,6 +8,7 @@ interface PhaseTimelineProps {
   onUpdatePhase: (phaseId: string, updates: Partial<Phase>) => void;
   onAddPhase: (name: string, startDate: string, endDate: string) => void;
   onRemovePhase: (phaseId: string) => void;
+  readOnly?: boolean;
 }
 
 const PHASE_COLORS = ['#6C5CE7', '#0984E3', '#0ABAB5', '#00B894', '#E17055', '#FDCB6E', '#74B9FF', '#A29BFE'];
@@ -17,7 +18,7 @@ function friendlyDate(date: string): string {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-export default function PhaseTimeline({ phases: unsortedPhases, projectStartDate, onUpdatePhase, onAddPhase, onRemovePhase }: PhaseTimelineProps) {
+export default function PhaseTimeline({ phases: unsortedPhases, projectStartDate, onUpdatePhase, onAddPhase, onRemovePhase, readOnly }: PhaseTimelineProps) {
   const [editingPhase, setEditingPhase] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
@@ -59,15 +60,17 @@ export default function PhaseTimeline({ phases: unsortedPhases, projectStartDate
     <div className="bg-bg-secondary border border-border-primary rounded-xl p-5">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-white">Project Timeline</h3>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-500">Click a phase to edit</span>
-          <button
-            onClick={() => setShowAdd(!showAdd)}
-            className="text-xs text-christian hover:text-blue-400 transition-colors"
-          >
-            + Add Phase
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500">Click a phase to edit</span>
+            <button
+              onClick={() => setShowAdd(!showAdd)}
+              className="text-xs text-christian hover:text-blue-400 transition-colors"
+            >
+              + Add Phase
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add phase form */}
@@ -115,7 +118,7 @@ export default function PhaseTimeline({ phases: unsortedPhases, projectStartDate
             return (
               <button
                 key={phase.id}
-                onClick={() => setEditingPhase(isEditing ? null : phase.id)}
+                onClick={() => !readOnly && setEditingPhase(isEditing ? null : phase.id)}
                 title={`${phase.name}\n${friendlyDate(phase.startDate)} — ${friendlyDate(phase.endDate)}`}
                 className="absolute top-0 h-full flex items-center justify-center transition-all hover:brightness-110 overflow-hidden px-1"
                 style={{
@@ -142,15 +145,15 @@ export default function PhaseTimeline({ phases: unsortedPhases, projectStartDate
           })}
         </div>
 
-        {/* Today marker */}
+        {/* Today marker — animated slide-in */}
         {todayPercent >= 0 && todayPercent <= 100 && (
           <div
-            className="absolute top-0 flex flex-col items-center pointer-events-none"
+            className="absolute top-0 flex flex-col items-center pointer-events-none animate-slide-today"
             style={{ left: `${todayPercent}%`, height: '56px' }}
           >
             <div className="w-0.5 h-14 bg-white" />
             <div className="mt-1 bg-white text-bg-primary text-[10px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap">
-              Today
+              Today, {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </div>
           </div>
         )}

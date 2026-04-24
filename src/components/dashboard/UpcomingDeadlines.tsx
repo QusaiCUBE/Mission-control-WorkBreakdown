@@ -37,7 +37,8 @@ export default function UpcomingDeadlines({ modules, developers, onModuleClick }
               <button
                 key={module.id}
                 onClick={() => onModuleClick(module.id)}
-                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-bg-tertiary transition-colors text-left"
+                className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-bg-tertiary transition-colors text-left animate-fade-right"
+                style={{ animationDelay: `${0.5 + upcoming.indexOf(module) * 0.1}s` }}
               >
                 <div
                   className="w-1.5 h-8 rounded-full flex-shrink-0"

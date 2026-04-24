@@ -1,15 +1,9 @@
-import { Module, ModuleStatus } from '../types';
+import { Module } from '../types';
 import { daysBetween, getToday } from './dates';
 
-const STATUS_WEIGHT: Record<ModuleStatus, number> = {
-  backlog: 0,
-  in_progress: 33,
-  in_review: 66,
-  done: 100,
-};
-
 export function getModuleProgress(module: Module): number {
-  return STATUS_WEIGHT[module.status];
+  const v = typeof module.progress === 'number' ? module.progress : 0;
+  return Math.max(0, Math.min(100, v));
 }
 
 export function getModuleTaskCounts(module: Module): { completed: number; total: number } {
@@ -20,7 +14,7 @@ export function getModuleTaskCounts(module: Module): { completed: number; total:
 
 export function getOverallProgress(modules: Module[]): number {
   if (modules.length === 0) return 0;
-  const total = modules.reduce((sum, m) => sum + STATUS_WEIGHT[m.status], 0);
+  const total = modules.reduce((sum, m) => sum + getModuleProgress(m), 0);
   return Math.round(total / modules.length);
 }
 

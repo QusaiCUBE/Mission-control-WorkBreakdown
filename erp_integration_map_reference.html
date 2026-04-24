@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cube Building Systems — ERP Integration Map</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0F1117; font-family: 'Inter', sans-serif; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+  .canvas { width: 1500px; }
+  h1 { color: #fff; font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+  .subtitle { color: #8B8FA3; font-size: 14px; text-align: center; margin-bottom: 50px; }
+  svg { width: 100%; height: auto; }
+  .box-shadow { filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35)); }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>Cube Building Systems — ERP Integration Map</h1>
+  <p class="subtitle">Data flow and module integration overview</p>
+
+  <svg viewBox="0 0 1500 1050" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </marker>
+    </defs>
+
+    <!-- ======================================= -->
+    <!-- ERP HUB                                  -->
+    <!-- ======================================= -->
+    <g class="box-shadow">
+      <rect x="450" y="40" width="480" height="85" rx="16" fill="#6C5CE7" stroke="#8B7BF0" stroke-width="1"/>
+      <text x="690" y="72" text-anchor="middle" fill="#fff" font-size="22" font-weight="700">Cube Building Systems ERP</text>
+      <text x="690" y="100" text-anchor="middle" fill="#D5CFFF" font-size="14">Central integration hub — all data routes through here</text>
+    </g>
+
+    <!-- ======================================= -->
+    <!-- AI AGENT                                 -->
+    <!-- ======================================= -->
+    <g class="box-shadow">
+      <rect x="1100" y="40" width="300" height="85" rx="16" fill="#1A2332" stroke="#F39C12" stroke-width="1.5"/>
+      <text x="1250" y="68" text-anchor="middle" fill="#F9CA24" font-size="17" font-weight="700">CBS AI Agent</text>
+      <text x="1250" y="92" text-anchor="middle" fill="#8B9DC3" font-size="12">Full ERP access, tasks, chatbot</text>
+    </g>
+    <line x1="930" y1="82" x2="1098" y2="82" stroke="#F39C12" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="970" y="62" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="1020" y="77" text-anchor="middle" fill="#F9CA24" font-size="11" font-weight="500">Full data access</text>
+
+    <!-- AI Agent vertical reach line -->
+    <line x1="1250" y1="125" x2="1250" y2="890" stroke="#F39C12" stroke-width="0.6" stroke-dasharray="4 4" opacity="0.3"/>
+    <line x1="1150" y1="890" x2="1350" y2="890" stroke="#F39C12" stroke-width="0.6" stroke-dasharray="4 4" opacity="0.3"/>
+    <text x="1250" y="910" text-anchor="middle" fill="#F39C12" font-size="10" opacity="0.5">Accesses all modules</text>
+
+    <!-- ======================================= -->
+    <!-- TIER 1: Core Modules (y=270)             -->
+    <!-- ======================================= -->
+
+    <!-- CRM -->
+    <g class="box-shadow">
+      <rect x="80" y="270" width="240" height="80" rx="12" fill="#1A2332" stroke="#0ABAB5" stroke-width="1.2"/>
+      <text x="200" y="302" text-anchor="middle" fill="#5DE8E3" font-size="17" font-weight="600">CRM</text>
+      <text x="200" y="328" text-anchor="middle" fill="#8B9DC3" font-size="12">Clients, leads, pipeline</text>
+    </g>
+
+    <!-- Offsite -->
+    <g class="box-shadow">
+      <rect x="400" y="270" width="240" height="80" rx="12" fill="#1A2332" stroke="#E17055" stroke-width="1.2"/>
+      <text x="520" y="302" text-anchor="middle" fill="#F0926E" font-size="17" font-weight="600">Offsite</text>
+      <text x="520" y="328" text-anchor="middle" fill="#8B9DC3" font-size="12">Modular construction</text>
+    </g>
+
+    <!-- Procore Replica -->
+    <g class="box-shadow">
+      <rect x="720" y="270" width="240" height="80" rx="12" fill="#1A2332" stroke="#D63031" stroke-width="1.2"/>
+      <text x="840" y="302" text-anchor="middle" fill="#FF7675" font-size="17" font-weight="600">Procore (Replica)</text>
+      <text x="840" y="328" text-anchor="middle" fill="#8B9DC3" font-size="12">Field ops, RFIs, submittals</text>
+    </g>
+
+    <!-- Live Material Pricing -->
+    <g class="box-shadow">
+      <rect x="1040" y="270" width="260" height="80" rx="12" fill="#1A2332" stroke="#0984E3" stroke-width="1.2"/>
+      <text x="1170" y="302" text-anchor="middle" fill="#74B9FF" font-size="17" font-weight="600">Live Material Pricing</text>
+      <text x="1170" y="328" text-anchor="middle" fill="#8B9DC3" font-size="12">Lumber, steel, real-time rates</text>
+    </g>
+
+    <!-- ======================================= -->
+    <!-- TIER 2: Tools and Data Feeds (y=580)     -->
+    <!-- ======================================= -->
+
+    <!-- Bidding / Tenders -->
+    <g class="box-shadow">
+      <rect x="80" y="580" width="240" height="80" rx="12" fill="#1A2332" stroke="#FDCB6E" stroke-width="1.2"/>
+      <text x="200" y="612" text-anchor="middle" fill="#FFEAA7" font-size="17" font-weight="600">Bidding / Tenders</text>
+      <text x="200" y="638" text-anchor="middle" fill="#8B9DC3" font-size="12">Scrapes and tracks tenders</text>
+    </g>
+
+    <!-- Document Generation -->
+    <g class="box-shadow">
+      <rect x="400" y="580" width="240" height="80" rx="12" fill="#1A2332" stroke="#A29BFE" stroke-width="1.2"/>
+      <text x="520" y="612" text-anchor="middle" fill="#D5CFFF" font-size="17" font-weight="600">Document Generation</text>
+      <text x="520" y="638" text-anchor="middle" fill="#8B9DC3" font-size="12">Proposals, RFPs, reports</text>
+    </g>
+
+    <!-- Site Photos -->
+    <g class="box-shadow">
+      <rect x="720" y="580" width="240" height="80" rx="12" fill="#1A2332" stroke="#E056A0" stroke-width="1.2"/>
+      <text x="840" y="612" text-anchor="middle" fill="#F78FB3" font-size="17" font-weight="600">Site Photos</text>
+      <text x="840" y="638" text-anchor="middle" fill="#8B9DC3" font-size="12">Mobile app + web database</text>
+    </g>
+
+    <!-- Grants / Funds -->
+    <g class="box-shadow">
+      <rect x="1040" y="580" width="260" height="80" rx="12" fill="#1A2332" stroke="#00B894" stroke-width="1.2"/>
+      <text x="1170" y="612" text-anchor="middle" fill="#55EFC4" font-size="17" font-weight="600">Grants / Gov Funds</text>
+      <text x="1170" y="638" text-anchor="middle" fill="#8B9DC3" font-size="12">Government grants and funding</text>
+    </g>
+
+    <!-- ======================================= -->
+    <!-- ARROWS: ERP → Tier 1                     -->
+    <!-- ======================================= -->
+
+    <!-- ERP → CRM -->
+    <line x1="510" y1="125" x2="250" y2="268" stroke="#0ABAB5" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="320" y="180" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="370" y="195" text-anchor="middle" fill="#5DE8E3" font-size="11" font-weight="500">Client data</text>
+
+    <!-- ERP → Offsite -->
+    <line x1="620" y1="125" x2="540" y2="268" stroke="#E17055" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="535" y="190" width="90" height="22" rx="4" fill="#0F1117"/>
+    <text x="580" y="205" text-anchor="middle" fill="#F0926E" font-size="11" font-weight="500">Project data</text>
+
+    <!-- ERP → Procore -->
+    <line x1="770" y1="125" x2="820" y2="268" stroke="#D63031" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="775" y="190" width="80" height="22" rx="4" fill="#0F1117"/>
+    <text x="815" y="205" text-anchor="middle" fill="#FF7675" font-size="11" font-weight="500">Field docs</text>
+
+    <!-- ERP → Material Pricing -->
+    <line x1="880" y1="125" x2="1100" y2="268" stroke="#0984E3" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <rect x="960" y="180" width="90" height="22" rx="4" fill="#0F1117"/>
+    <text x="1005" y="195" text-anchor="middle" fill="#74B9FF" font-size="11" font-weight="500">Price feeds</text>
+
+    <!-- ======================================= -->
+    <!-- ARROWS: Tier 1 → Tier 2 (straight down)  -->
+    <!-- ======================================= -->
+
+    <!-- CRM → Bidding -->
+    <line x1="200" y1="350" x2="200" y2="578" stroke="#FDCB6E" stroke-width="1.3" marker-end="url(#arrow)"/>
+    <rect x="208" y="460" width="110" height="22" rx="4" fill="#0F1117"/>
+    <text x="263" y="475" text-anchor="middle" fill="#FFEAA7" font-size="11" font-weight="500">Tender contacts</text>
+
+    <!-- Offsite → Doc Gen -->
+    <line x1="520" y1="350" x2="520" y2="578" stroke="#A29BFE" stroke-width="1.3" marker-end="url(#arrow)"/>
+    <rect x="528" y="460" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="578" y="475" text-anchor="middle" fill="#D5CFFF" font-size="11" font-weight="500">Project details</text>
+
+    <!-- Procore → Site Photos -->
+    <line x1="840" y1="350" x2="840" y2="578" stroke="#E056A0" stroke-width="1.3" marker-end="url(#arrow)"/>
+    <rect x="848" y="460" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="898" y="475" text-anchor="middle" fill="#F78FB3" font-size="11" font-weight="500">Site records</text>
+
+    <!-- Material Pricing → Grants -->
+    <line x1="1170" y1="350" x2="1170" y2="578" stroke="#00B894" stroke-width="1.3" marker-end="url(#arrow)"/>
+    <rect x="1178" y="460" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="1228" y="475" text-anchor="middle" fill="#55EFC4" font-size="11" font-weight="500">Cost context</text>
+
+    <!-- ======================================= -->
+    <!-- CROSS-MODULE (dashed)                    -->
+    <!-- ======================================= -->
+
+    <!-- Offsite ↔ Procore -->
+    <line x1="640" y1="295" x2="718" y2="295" stroke="#aaa" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+
+    <!-- Material Pricing → Offsite (BIM cost data) — routed above boxes -->
+    <path d="M1040 290 L1040 250 L640 250 L640 268" fill="none" stroke="#0984E3" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="790" y="236" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="840" y="251" text-anchor="middle" fill="#74B9FF" font-size="11" font-weight="500">BIM cost data</text>
+
+    <!-- Bidding → Offsite (won tenders) -->
+    <path d="M290 600 Q 400 520, 480 352" fill="none" stroke="#FDCB6E" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="340" y="500" width="90" height="22" rx="4" fill="#0F1117"/>
+    <text x="385" y="515" text-anchor="middle" fill="#FFEAA7" font-size="11" font-weight="500">Won tenders</text>
+
+    <!-- Bidding → CRM (new leads) -->
+    <line x1="120" y1="580" x2="160" y2="352" stroke="#FDCB6E" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="70" y="470" width="80" height="22" rx="4" fill="#0F1117"/>
+    <text x="110" y="485" text-anchor="middle" fill="#FFEAA7" font-size="11" font-weight="500">New leads</text>
+
+    <!-- Bidding → Doc Gen (RFP responses) -->
+    <line x1="320" y1="620" x2="398" y2="620" stroke="#A29BFE" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+
+    <!-- CRM → Doc Gen (client fields) -->
+    <path d="M320 330 Q 400 420, 450 578" fill="none" stroke="#A29BFE" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="340" y="430" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="390" y="445" text-anchor="middle" fill="#D5CFFF" font-size="11" font-weight="500">Client fields</text>
+
+    <!-- Site Photos → Offsite (photo logs) -->
+    <path d="M760 580 Q 680 500, 570 352" fill="none" stroke="#E056A0" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="630" y="490" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="680" y="505" text-anchor="middle" fill="#F78FB3" font-size="11" font-weight="500">Photo logs</text>
+
+    <!-- Site Photos → Procore (field photos) -->
+    <line x1="900" y1="580" x2="880" y2="352" stroke="#E056A0" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="890" y="480" width="100" height="22" rx="4" fill="#0F1117"/>
+    <text x="940" y="495" text-anchor="middle" fill="#F78FB3" font-size="11" font-weight="500">Field photos</text>
+
+    <!-- Grants → CRM (funding for clients) — routed left of all boxes -->
+    <path d="M1170 660 L1170 740 L50 740 L50 310 L78 310" fill="none" stroke="#00B894" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <rect x="520" y="724" width="140" height="22" rx="4" fill="#0F1117"/>
+    <text x="590" y="739" text-anchor="middle" fill="#55EFC4" font-size="11" font-weight="500">Funding for clients</text>
+
+    <!-- ======================================= -->
+    <!-- LEGEND                                   -->
+    <!-- ======================================= -->
+    <rect x="120" y="840" width="1100" height="80" rx="12" fill="#161B26" stroke="#2D3448" stroke-width="0.8"/>
+
+    <!-- Row 1 -->
+    <line x1="160" y1="870" x2="210" y2="870" stroke="#8B9DC3" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="222" y="875" fill="#8B9DC3" font-size="12">Primary data flow</text>
+
+    <line x1="430" y1="870" x2="480" y2="870" stroke="#8B9DC3" stroke-width="1" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+    <text x="492" y="875" fill="#8B9DC3" font-size="12">Cross-module feedback</text>
+
+    <rect x="700" y="863" width="14" height="14" rx="3" fill="none" stroke="#6C5CE7" stroke-width="1.2"/>
+    <text x="724" y="875" fill="#8B9DC3" font-size="12">ERP hub</text>
+
+    <rect x="840" y="863" width="14" height="14" rx="3" fill="none" stroke="#0ABAB5" stroke-width="1.2"/>
+    <text x="864" y="875" fill="#8B9DC3" font-size="12">Core modules</text>
+
+    <rect x="1000" y="863" width="14" height="14" rx="3" fill="none" stroke="#FDCB6E" stroke-width="1.2"/>
+    <text x="1024" y="875" fill="#8B9DC3" font-size="12">Tools / feeds</text>
+
+    <!-- Row 2 -->
+    <rect x="160" y="893" width="14" height="14" rx="3" fill="none" stroke="#F39C12" stroke-width="1.2"/>
+    <text x="184" y="905" fill="#8B9DC3" font-size="12">AI agent (full ERP access)</text>
+
+  </svg>
+</div>
+</body>
+</html>

@@ -199,6 +199,9 @@ export default function GanttChart({
 
         return (
           <g key={module.id} style={{ cursor: isDraggingThis ? 'grabbing' : 'grab' }}>
+            <title>
+              {module.name} — {progress}% complete{module.startDate && module.dueDate ? ` (${module.startDate} → ${module.dueDate})` : ''}
+            </title>
             {/* Background bar */}
             <rect
               x={x}
@@ -222,6 +225,19 @@ export default function GanttChart({
                 height={BAR_HEIGHT}
                 rx={4}
                 fill={`${barColor}80`}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+
+            {/* Progress boundary tick */}
+            {progress > 0 && progress < 100 && (
+              <line
+                x1={x + progressW}
+                y1={y}
+                x2={x + progressW}
+                y2={y + BAR_HEIGHT}
+                stroke="white"
+                strokeWidth={1}
                 style={{ pointerEvents: 'none' }}
               />
             )}

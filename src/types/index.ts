@@ -1,4 +1,4 @@
-export type ViewName = 'dashboard' | 'board' | 'timeline' | 'workload' | 'settings';
+export type ViewName = 'dashboard' | 'board' | 'timeline' | 'workload' | 'map' | 'settings';
 export type ModuleStatus = 'backlog' | 'in_progress' | 'in_review' | 'done';
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
 
@@ -36,6 +36,15 @@ export interface RequiredDocument {
   notes: string;
 }
 
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  data: string; // base64 data URL
+  addedDate: string;
+}
+
 export interface StatusChange {
   from: string;
   to: string;
@@ -55,11 +64,42 @@ export interface Module {
   dueDate: string | null;
   completedDate: string | null;
   priority: Priority;
+  progress: number;
   tasks: Task[];
   documents: RequiredDocument[];
+  attachments: Attachment[];
   notes: string;
   statusHistory: StatusChange[];
   dependencies: string[];
+}
+
+export interface MapNode {
+  id: string;
+  label: string;
+  subtitle: string;
+  type: 'module' | 'service' | 'database' | 'api' | 'user' | 'custom';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color: string;
+}
+
+export interface MapConnection {
+  id: string;
+  from: string;
+  to: string;
+  fromAnchor: 'top' | 'right' | 'bottom' | 'left';
+  toAnchor: 'top' | 'right' | 'bottom' | 'left';
+  label: string;
+  style: 'solid' | 'dashed';
+  offsetX: number;
+  offsetY: number;
+}
+
+export interface IntegrationMap {
+  nodes: MapNode[];
+  connections: MapConnection[];
 }
 
 export interface Project {
@@ -68,4 +108,5 @@ export interface Project {
   developers: [Developer, Developer];
   phases: Phase[];
   modules: Module[];
+  integrationMap: IntegrationMap;
 }

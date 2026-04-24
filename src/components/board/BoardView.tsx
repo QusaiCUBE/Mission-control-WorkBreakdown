@@ -1,22 +1,51 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Module, Developer, ModuleStatus, Phase } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import KanbanColumn from './KanbanColumn';
+import ProgressPopover from './ProgressPopover';
 
 interface BoardViewProps {
   modules: Module[];
   developers: [Developer, Developer];
   phases: Phase[];
   onMoveModule: (moduleId: string, status: ModuleStatus) => void;
+  onUpdateProgress: (moduleId: string, progress: number) => void;
   onModuleClick: (moduleId: string) => void;
-  onAddModule: (name: string, description: string, phase: string) => void;
+  onAddModule?: (name: string, description: string, phase: string) => void;
+  readOnly?: boolean;
 }
 
 const COLUMNS: ModuleStatus[] = ['backlog', 'in_progress', 'in_review', 'done'];
+const PROMPT_STATUSES: ModuleStatus[] = ['in_progress', 'in_review'];
 
-export default function BoardView({ modules, developers, phases, onMoveModule, onModuleClick, onAddModule }: BoardViewProps) {
+export default function BoardView({ modules, developers, phases, onMoveModule, onUpdateProgress, onModuleClick, onAddModule, readOnly }: BoardViewProps) {
+  const lastDropCoords = useRef<{ x: number; y: number } | null>(null);
+  const [popover, setPopover] = useState<{ moduleId: string; x: number; y: number } | null>(null);
+
+  const handleMove = useCallback(
+    (moduleId: string, targetStatus: ModuleStatus) => {
+      const current = modules.find((m) => m.id === moduleId);
+      const isChangingStatus = current && current.status !== targetStatus;
+      onMoveModule(moduleId, targetStatus);
+      if (!readOnly && isChangingStatus && PROMPT_STATUSES.includes(targetStatus) && lastDropCoords.current) {
+        setPopover({ moduleId, x: lastDropCoords.current.x, y: lastDropCoords.current.y });
+      }
+    },
+    [modules, onMoveModule, readOnly]
+  );
+
   const { dragOverColumn, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } =
-    useDragAndDrop(onMoveModule);
+    useDragAndDrop(handleMove);
+
+  const captureDrop = useCallback(
+    (e: React.DragEvent, status: ModuleStatus) => {
+      lastDropCoords.current = { x: e.clientX, y: e.clientY };
+      handleDrop(e, status);
+    },
+    [handleDrop]
+  );
+
+  const popoverModule = popover ? modules.find((m) => m.id === popover.moduleId) : null;
 
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
@@ -25,7 +54,7 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
 
   const handleAdd = () => {
     if (!newName.trim()) return;
-    onAddModule(newName.trim(), newDesc.trim(), newPhase);
+    onAddModule?.(newName.trim(), newDesc.trim(), newPhase);
     setNewName('');
     setNewDesc('');
     setShowAdd(false);
@@ -34,7 +63,7 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
   return (
     <div className="space-y-4">
       {/* Add module bar */}
-      <div className="flex items-center gap-3">
+      {onAddModule && !readOnly && <div className="flex items-center gap-3">
         {showAdd ? (
           <div className="flex items-end gap-2 flex-wrap bg-bg-secondary border border-border-primary rounded-lg p-3 w-full">
             <div className="flex-1 min-w-[180px]">
@@ -94,7 +123,7 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
             + Add Module
           </button>
         )}
-      </div>
+      </div>}
 
       {/* Kanban columns */}
       <div className="flex gap-4 overflow-x-auto pb-4">
@@ -112,11 +141,21 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
               onDragEnd={handleDragEnd}
               onDragOver={(e) => handleDragOver(e, status)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, status)}
+              onDrop={(e) => captureDrop(e, status)}
             />
           );
         })}
       </div>
+
+      {popover && popoverModule && (
+        <ProgressPopover
+          value={popoverModule.progress ?? 0}
+          x={popover.x}
+          y={popover.y}
+          onChange={(v) => onUpdateProgress(popover.moduleId, v)}
+          onClose={() => setPopover(null)}
+        />
+      )}
     </div>
   );
 }

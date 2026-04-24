@@ -1,8 +1,8 @@
 import { Module, Developer } from '../../types';
-import { STATUS_COLORS } from '../../constants';
+import { STATUS_COLORS, STATUS_LABELS } from '../../constants';
 import ProgressBar from '../shared/ProgressBar';
 import { getModuleProgress } from '../../utils/progress';
-import { isOverdue } from '../../utils/dates';
+import { isOverdue, formatDate } from '../../utils/dates';
 
 interface ModuleStatusGridProps {
   modules: Module[];
@@ -20,22 +20,44 @@ export default function ModuleStatusGrid({ modules, developers, onModuleClick }:
           const progress = getModuleProgress(module);
           const overdue = isOverdue(module.dueDate) && module.status !== 'done';
           const statusColor = overdue ? '#D63031' : STATUS_COLORS[module.status];
-          const dev = developers.find((d) => d.id === module.assignedTo);
+          const isBoth = module.assignedTo === 'both';
+          const dev = isBoth ? null : developers.find((d) => d.id === module.assignedTo);
+          const borderColor = isBoth ? '#8B5CF6' : (dev?.color || '#6B7280');
+          const statusLabel = overdue ? 'Overdue' : STATUS_LABELS[module.status];
 
+          const idx = modules.indexOf(module);
           return (
             <button
               key={module.id}
               onClick={() => onModuleClick(module.id)}
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-bg-tertiary transition-colors text-left"
-              style={{ borderLeft: `3px solid ${dev?.color || '#6B7280'}` }}
+              className="flex items-start gap-3 p-3 rounded-lg hover:bg-bg-tertiary transition-colors text-left animate-scale-in"
+              style={{ borderLeft: `3px solid ${borderColor}`, animationDelay: `${0.3 + idx * 0.06}s` }}
             >
               <div
-                className="w-2 h-2 rounded-full flex-shrink-0"
+                className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
                 style={{ backgroundColor: statusColor }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 truncate">{module.name}</p>
-                <div className="mt-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm text-gray-200 truncate">{module.name}</p>
+                  <span
+                    className="text-[10px] font-medium flex-shrink-0 px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: `${statusColor}20`, color: statusColor }}
+                  >
+                    {statusLabel}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  {dev && <span className="text-[10px] text-gray-500">{dev.name}</span>}
+                  {isBoth && <span className="text-[10px] text-purple-400">Both</span>}
+                  {!dev && !isBoth && <span className="text-[10px] text-gray-600">Unassigned</span>}
+                  {module.dueDate && module.status !== 'done' && (
+                    <span className={`text-[10px] ${overdue ? 'text-status-overdue' : 'text-gray-600'}`}>
+                      Due {formatDate(module.dueDate)}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1.5">
                   <ProgressBar value={progress} size="sm" color={statusColor} />
                 </div>
               </div>

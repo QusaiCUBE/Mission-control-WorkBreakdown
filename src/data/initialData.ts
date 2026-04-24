@@ -64,8 +64,10 @@ function createModules(phases: Phase[]): Module[] {
       dueDate,
       completedDate: null,
       priority: 'medium',
+      progress: 0,
       tasks: createTasks(),
       documents: [],
+      attachments: [],
       notes: '',
       statusHistory: [],
       dependencies: [],
@@ -88,8 +90,10 @@ function createModules(phases: Phase[]): Module[] {
     dueDate: phase2.endDate,
     completedDate: null,
     priority: 'high',
+    progress: 0,
     tasks: createTasks(),
     documents: [],
+    attachments: [],
     notes: '',
     statusHistory: [],
     dependencies: phase1ModuleIds,
@@ -111,6 +115,7 @@ export function createInitialProject(startDate: string): Project {
     ],
     phases,
     modules,
+    integrationMap: { nodes: [], connections: [] },
   };
 }
 
@@ -127,5 +132,6 @@ export function recreateProject(startDate: string, durations?: number[]): Projec
     ],
     phases,
     modules,
+    integrationMap: { nodes: [], connections: [] },
   };
 }

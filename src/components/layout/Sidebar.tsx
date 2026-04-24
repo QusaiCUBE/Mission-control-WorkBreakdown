@@ -4,6 +4,7 @@ import { VIEW_LABELS } from '../../constants';
 interface SidebarProps {
   currentView: ViewName;
   onViewChange: (view: ViewName) => void;
+  hideSettings?: boolean;
 }
 
 const VIEW_ICONS: Record<ViewName, JSX.Element> = {
@@ -40,6 +41,14 @@ const VIEW_ICONS: Record<ViewName, JSX.Element> = {
       <path d="M17 14a4 4 0 0 1 4 4v3" />
     </svg>
   ),
+  map: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+      <rect x="3" y="3" width="6" height="6" rx="1" />
+      <rect x="15" y="3" width="6" height="6" rx="1" />
+      <rect x="9" y="15" width="6" height="6" rx="1" />
+      <path d="M9 6h6M6 9v6l3 3M18 9v6l-3 3" />
+    </svg>
+  ),
   settings: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
       <circle cx="12" cy="12" r="3" />
@@ -48,9 +57,10 @@ const VIEW_ICONS: Record<ViewName, JSX.Element> = {
   ),
 };
 
-const VIEWS: ViewName[] = ['dashboard', 'board', 'timeline', 'workload', 'settings'];
+const VIEWS: ViewName[] = ['dashboard', 'board', 'timeline', 'workload', 'map', 'settings'];
 
-export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, hideSettings }: SidebarProps) {
+  const views = hideSettings ? VIEWS.filter((v) => v !== 'settings') : VIEWS;
   return (
     <aside className="fixed left-0 top-0 h-screen w-16 lg:w-56 bg-bg-secondary border-r border-border-primary flex flex-col z-30 transition-all duration-200">
       <div className="h-14 flex items-center px-4 border-b border-border-primary">
@@ -63,7 +73,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2">
-        {VIEWS.map((view) => (
+        {views.map((view) => (
           <button
             key={view}
             onClick={() => onViewChange(view)}
