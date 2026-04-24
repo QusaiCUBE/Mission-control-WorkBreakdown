@@ -50,7 +50,7 @@ export default function ModuleCard({
 
       <p className="text-xs text-gray-500 mb-3 line-clamp-1">{module.description}</p>
 
-      <ProgressBar value={progress} size="sm" />
+      {module.status !== 'done' && <ProgressBar value={progress} size="sm" />}
 
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2">

@@ -99,17 +99,19 @@ export default function ModuleDetail({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div>
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 block">
-            Progress
-          </label>
-          <Slider
-            value={module.progress ?? 0}
-            onChange={(v) => onUpdateProgress(module.id, v)}
-            disabled={readOnly}
-            ariaLabel={`Progress for ${module.name}`}
-          />
-        </div>
+        {module.status !== 'done' && (
+          <div>
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 block">
+              Progress
+            </label>
+            <Slider
+              value={module.progress ?? 0}
+              onChange={(v) => onUpdateProgress(module.id, v)}
+              disabled={readOnly}
+              ariaLabel={`Progress for ${module.name}`}
+            />
+          </div>
+        )}
 
         <ModuleMetadata
           module={module}
