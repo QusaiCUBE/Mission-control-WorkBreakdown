@@ -224,11 +224,9 @@ export function useProject() {
         const today = getToday();
         const movingToDone = newStatus === 'done';
         const movingFromDone = m.status === 'done' && newStatus !== 'done';
-        // Progress presets on backlog/done only; in_progress/in_review keep current value
-        // (the popover is what sets them).
-        let nextProgress = m.progress;
-        if (newStatus === 'backlog') nextProgress = 0;
-        else if (newStatus === 'done') nextProgress = 100;
+        // Progress is scoped to the current column. Any status change resets to 0,
+        // except Done which is always 100.
+        const nextProgress = newStatus === 'done' ? 100 : 0;
         return {
           ...m,
           status: newStatus,

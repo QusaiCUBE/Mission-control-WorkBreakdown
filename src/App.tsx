@@ -78,7 +78,6 @@ export default function App() {
               developers={project.developers}
               phases={project.phases}
               onMoveModule={perms.canMoveModules ? projectHook.moveModule : noopAny}
-              onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
               onModuleClick={viewState.openModuleDetail}
               onAddModule={perms.canCreateModules ? projectHook.addModule : undefined}
               readOnly={!perms.canMoveModules}

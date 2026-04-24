@@ -1,51 +1,23 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { Module, Developer, ModuleStatus, Phase } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import KanbanColumn from './KanbanColumn';
-import ProgressPopover from './ProgressPopover';
 
 interface BoardViewProps {
   modules: Module[];
   developers: [Developer, Developer];
   phases: Phase[];
   onMoveModule: (moduleId: string, status: ModuleStatus) => void;
-  onUpdateProgress: (moduleId: string, progress: number) => void;
   onModuleClick: (moduleId: string) => void;
   onAddModule?: (name: string, description: string, phase: string) => void;
   readOnly?: boolean;
 }
 
 const COLUMNS: ModuleStatus[] = ['backlog', 'in_progress', 'in_review', 'done'];
-const PROMPT_STATUSES: ModuleStatus[] = ['in_progress', 'in_review'];
 
-export default function BoardView({ modules, developers, phases, onMoveModule, onUpdateProgress, onModuleClick, onAddModule, readOnly }: BoardViewProps) {
-  const lastDropCoords = useRef<{ x: number; y: number } | null>(null);
-  const [popover, setPopover] = useState<{ moduleId: string; x: number; y: number } | null>(null);
-
-  const handleMove = useCallback(
-    (moduleId: string, targetStatus: ModuleStatus) => {
-      const current = modules.find((m) => m.id === moduleId);
-      const isChangingStatus = current && current.status !== targetStatus;
-      onMoveModule(moduleId, targetStatus);
-      if (!readOnly && isChangingStatus && PROMPT_STATUSES.includes(targetStatus) && lastDropCoords.current) {
-        setPopover({ moduleId, x: lastDropCoords.current.x, y: lastDropCoords.current.y });
-      }
-    },
-    [modules, onMoveModule, readOnly]
-  );
-
+export default function BoardView({ modules, developers, phases, onMoveModule, onModuleClick, onAddModule, readOnly }: BoardViewProps) {
   const { dragOverColumn, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } =
-    useDragAndDrop(handleMove);
-
-  const captureDrop = useCallback(
-    (e: React.DragEvent, status: ModuleStatus) => {
-      lastDropCoords.current = { x: e.clientX, y: e.clientY };
-      handleDrop(e, status);
-    },
-    [handleDrop]
-  );
-
-  const popoverModule = popover ? modules.find((m) => m.id === popover.moduleId) : null;
+    useDragAndDrop(onMoveModule);
 
   const [showAdd, setShowAdd] = useState(false);
   const [newName, setNewName] = useState('');
@@ -141,21 +113,11 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
               onDragEnd={handleDragEnd}
               onDragOver={(e) => handleDragOver(e, status)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => captureDrop(e, status)}
+              onDrop={(e) => handleDrop(e, status)}
             />
           );
         })}
       </div>
-
-      {popover && popoverModule && (
-        <ProgressPopover
-          value={popoverModule.progress ?? 0}
-          x={popover.x}
-          y={popover.y}
-          onChange={(v) => onUpdateProgress(popover.moduleId, v)}
-          onClose={() => setPopover(null)}
-        />
-      )}
     </div>
   );
 }
