@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Module, Developer, ModuleStatus, Phase } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
+import { getModuleProgress } from '../../utils/progress';
 import KanbanColumn from './KanbanColumn';
 
 interface BoardViewProps {
@@ -100,7 +101,9 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
       {/* Kanban columns */}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {COLUMNS.map((status) => {
-          const columnModules = modules.filter((m) => m.status === status);
+          const columnModules = modules
+            .filter((m) => m.status === status)
+            .sort((a, b) => getModuleProgress(b) - getModuleProgress(a));
           return (
             <KanbanColumn
               key={status}

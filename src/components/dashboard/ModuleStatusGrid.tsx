@@ -1,7 +1,7 @@
 import { Module, Developer } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants';
 import ProgressBar from '../shared/ProgressBar';
-import { getModuleProgress } from '../../utils/progress';
+import { getModuleProgress, getModuleOverallProgress } from '../../utils/progress';
 import { isOverdue, formatDate } from '../../utils/dates';
 
 interface ModuleStatusGridProps {
@@ -11,12 +11,16 @@ interface ModuleStatusGridProps {
 }
 
 export default function ModuleStatusGrid({ modules, developers, onModuleClick }: ModuleStatusGridProps) {
+  const sortedModules = [...modules].sort(
+    (a, b) => getModuleOverallProgress(b) - getModuleOverallProgress(a)
+  );
+
   return (
     <div className="bg-bg-secondary border border-border-primary rounded-xl p-5">
       <h3 className="text-sm font-semibold text-white mb-4">Modules at a Glance</h3>
 
       <div className="grid grid-cols-2 gap-2">
-        {modules.map((module) => {
+        {sortedModules.map((module, idx) => {
           const progress = getModuleProgress(module);
           const overdue = isOverdue(module.dueDate) && module.status !== 'done';
           const statusColor = overdue ? '#D63031' : STATUS_COLORS[module.status];
@@ -24,8 +28,6 @@ export default function ModuleStatusGrid({ modules, developers, onModuleClick }:
           const dev = isBoth ? null : developers.find((d) => d.id === module.assignedTo);
           const borderColor = isBoth ? '#8B5CF6' : (dev?.color || '#6B7280');
           const statusLabel = overdue ? 'Overdue' : STATUS_LABELS[module.status];
-
-          const idx = modules.indexOf(module);
           return (
             <button
               key={module.id}
