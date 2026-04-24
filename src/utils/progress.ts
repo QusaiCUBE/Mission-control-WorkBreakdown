@@ -6,6 +6,23 @@ export function getModuleProgress(module: Module): number {
   return Math.max(0, Math.min(100, v));
 }
 
+// Weighted contribution of a single module to the overall project progress.
+// Each column owns a slice of the 0-100 overall range; the per-module `progress`
+// (0-100 within its column) interpolates across that slice.
+//   backlog      → 0
+//   in_progress  → 0-50   (progress% scaled to this half)
+//   in_review    → 50-100
+//   done         → 100
+export function getModuleOverallProgress(module: Module): number {
+  const p = getModuleProgress(module);
+  switch (module.status) {
+    case 'backlog': return 0;
+    case 'in_progress': return p * 0.5;
+    case 'in_review': return 50 + p * 0.5;
+    case 'done': return 100;
+  }
+}
+
 export function getModuleTaskCounts(module: Module): { completed: number; total: number } {
   const total = module.documents.length;
   const completed = module.documents.filter((d) => d.status === 'received').length;
@@ -14,7 +31,7 @@ export function getModuleTaskCounts(module: Module): { completed: number; total:
 
 export function getOverallProgress(modules: Module[]): number {
   if (modules.length === 0) return 0;
-  const total = modules.reduce((sum, m) => sum + getModuleProgress(m), 0);
+  const total = modules.reduce((sum, m) => sum + getModuleOverallProgress(m), 0);
   return Math.round(total / modules.length);
 }
 
