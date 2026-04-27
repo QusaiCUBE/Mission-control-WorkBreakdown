@@ -1,4 +1,4 @@
-import { Module, Developer } from '../../types';
+import { Module, Developer, Priority } from '../../types';
 import ProgressBar from '../shared/ProgressBar';
 import StatusBadge from '../shared/StatusBadge';
 import { getModuleProgress } from '../../utils/progress';
@@ -10,8 +10,23 @@ interface DeveloperColumnProps {
   onModuleClick: (moduleId: string) => void;
 }
 
+const PRIORITY_RANK: Record<Priority, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+};
+
 export default function DeveloperColumn({ developer, modules, onModuleClick }: DeveloperColumnProps) {
   const doneCount = modules.filter((m) => m.status === 'done').length;
+
+  // Sort: active modules first (by priority high→low), done modules at the bottom
+  const sortedModules = [...modules].sort((a, b) => {
+    const aDone = a.status === 'done' ? 1 : 0;
+    const bDone = b.status === 'done' ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    return PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority];
+  });
 
   return (
     <div className="flex-1 min-w-[300px]">
@@ -33,12 +48,12 @@ export default function DeveloperColumn({ developer, modules, onModuleClick }: D
 
       {/* Module cards */}
       <div className="space-y-2">
-        {modules.length === 0 ? (
+        {sortedModules.length === 0 ? (
           <div className="p-4 border border-border-primary rounded-lg border-dashed text-center">
             <p className="text-xs text-gray-500">No modules assigned</p>
           </div>
         ) : (
-          modules.map((module) => {
+          sortedModules.map((module) => {
             const progress = getModuleProgress(module);
             const overdue = isOverdue(module.dueDate) && module.status !== 'done';
 
