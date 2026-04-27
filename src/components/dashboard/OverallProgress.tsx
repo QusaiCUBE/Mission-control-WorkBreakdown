@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Module } from '../../types';
-import { getOverallProgress, getModulesCompleted } from '../../utils/progress';
+import {
+  getOverallProgress,
+  getModulesCompleted,
+  getModuleOverallProgress,
+} from '../../utils/progress';
 
 interface OverallProgressProps {
   modules: Module[];
 }
 
 interface Segment {
-  count: number;
+  fraction: number;  // 0-1, share of the full ring this arc covers
   color: string;
   label: string;
 }
@@ -20,19 +24,25 @@ export default function OverallProgress({ modules }: OverallProgressProps) {
   const remaining = Math.max(0, modules.length - done - inReview - inProgress);
   const total = modules.length || 1;
 
-  // Segments are drawn in order around the circle. Remaining is intentionally
-  // omitted — the unfilled track represents it.
+  // Donut arcs reflect each status's *weighted contribution to overall progress*,
+  // so the colored portion of the ring exactly matches the percentage in the
+  // center. A done module contributes 100; in-review contributes 50–100; in-
+  // progress contributes 0–50. Sum / (total * 100) gives that status's share
+  // of the full ring.
+  const sumContribution = (status: Module['status']) =>
+    modules
+      .filter((m) => m.status === status)
+      .reduce((s, m) => s + getModuleOverallProgress(m), 0);
+
   const segments: Segment[] = [
-    { count: done, color: '#00B894', label: 'done' },          // green
-    { count: inReview, color: '#6C5CE7', label: 'in review' }, // purple
-    { count: inProgress, color: '#F39C12', label: 'in progress' }, // amber
+    { fraction: sumContribution('done') / (total * 100), color: '#00B894', label: 'done' },
+    { fraction: sumContribution('in_review') / (total * 100), color: '#6C5CE7', label: 'in review' },
+    { fraction: sumContribution('in_progress') / (total * 100), color: '#F39C12', label: 'in progress' },
   ];
 
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
 
-  // Animate the percentage count-up. Segment lengths use a CSS transition
-  // on stroke-dasharray for a coordinated reveal.
   const [displayProgress, setDisplayProgress] = useState(0);
   const [mounted, setMounted] = useState(false);
 
@@ -53,16 +63,15 @@ export default function OverallProgress({ modules }: OverallProgressProps) {
     return () => { clearTimeout(t); clearInterval(interval); };
   }, [overallProgress]);
 
-  // Pre-compute each segment's arc length and starting offset around the ring.
+  // Walk segments around the ring, tracking each arc's start position.
   let cumulative = 0;
   const arcs = segments.map((seg) => {
-    const length = (seg.count / total) * circumference;
+    const length = seg.fraction * circumference;
     const offset = cumulative;
     cumulative += length;
     return { ...seg, length, offset };
   });
 
-  // Build the summary line, skipping zero-count buckets.
   const parts: string[] = [];
   if (done > 0) parts.push(`${done} done`);
   if (inProgress > 0) parts.push(`${inProgress} in progress`);
@@ -77,12 +86,10 @@ export default function OverallProgress({ modules }: OverallProgressProps) {
       <div className="flex-1 flex flex-col items-center justify-center gap-4 w-full">
         <div className="relative w-44 h-44">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-            {/* Background track (also visually represents the "remaining" share) */}
             <circle cx="50" cy="50" r={radius} fill="none" stroke="#242836" strokeWidth="8" />
 
-            {/* One arc per status segment, butt-capped so they meet cleanly */}
             {arcs.map((arc) => {
-              if (arc.count === 0) return null;
+              if (arc.length <= 0.0001) return null;
               const dashLen = mounted ? arc.length : 0;
               return (
                 <circle
