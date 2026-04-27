@@ -1,6 +1,13 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, onValue, Database } from 'firebase/database';
-import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as fbSignOut,
+  User,
+} from 'firebase/auth';
 import { Project } from '../types';
 
 const firebaseConfig = {
@@ -41,36 +48,65 @@ export function subscribeSyncStatus(cb: (s: SyncStatus) => void): () => void {
   return () => { statusListeners.delete(cb); };
 }
 
-// Sign in anonymously so Firebase rules can require `auth != null`.
-// All DB ops wait on this promise to avoid permission-denied races.
-const authReady: Promise<void> = new Promise((resolve, reject) => {
+// === Auth state ===
+// `authReady` resolves once Firebase has determined whether a user is signed in
+// (regardless of outcome). DB operations check `currentUser` before running
+// rather than waiting on a promise that requires sign-in.
+let currentUser: User | null = null;
+const authListeners = new Set<(u: User | null) => void>();
+
+const authReady: Promise<void> = new Promise((resolve) => {
   const unsub = onAuthStateChanged(auth, (user) => {
+    currentUser = user;
+    authListeners.forEach((cb) => cb(user));
     if (user) {
-      unsub();
-      resolve();
+      setSyncStatus({ state: 'online', error: undefined });
+    } else {
+      setSyncStatus({ state: 'offline', error: undefined });
     }
-  });
-  signInAnonymously(auth).catch((err) => {
-    console.error('Firebase anonymous auth failed:', err);
-    setSyncStatus({ state: 'error', error: `Auth failed: ${err.code || err.message}` });
-    reject(err);
+    // Resolve on the first call, then keep the subscription alive for re-auth
+    resolve();
+    unsub; // keep reference; we never unsubscribe (app-lifetime)
   });
 });
 
-// Track connection state via the realtime DB's built-in presence ref
-authReady
-  .then(() => {
-    onValue(ref(db, '.info/connected'), (snap) => {
-      if (snap.val() === true) {
-        setSyncStatus({ state: 'online', error: undefined });
-      } else {
-        setSyncStatus({ state: 'offline' });
-      }
-    });
-  })
-  .catch(() => {
-    // Already reported via setSyncStatus
+export function getCurrentUser(): User | null {
+  return currentUser;
+}
+
+export function subscribeAuthState(cb: (u: User | null) => void): () => void {
+  cb(currentUser);
+  authListeners.add(cb);
+  return () => { authListeners.delete(cb); };
+}
+
+export async function signIn(email: string, password: string): Promise<User> {
+  const cred = await signInWithEmailAndPassword(auth, email, password);
+  return cred.user;
+}
+
+export async function signUp(email: string, password: string): Promise<User> {
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  return cred.user;
+}
+
+export async function signOut(): Promise<void> {
+  await fbSignOut(auth);
+}
+
+// Track connection state via the realtime DB's built-in presence ref.
+// Only mark as online/offline when there's a signed-in user; otherwise the
+// auth listener owns the offline state.
+authReady.then(() => {
+  onValue(ref(db, '.info/connected'), (snap) => {
+    if (!currentUser) return;
+    if (snap.val() === true) {
+      setSyncStatus({ state: 'online', error: undefined });
+    } else {
+      setSyncStatus({ state: 'offline' });
+    }
   });
+});
 
 // Firebase converts arrays to objects with numeric keys.
 // This recursively converts them back to arrays.
@@ -98,9 +134,16 @@ function fixArrays(obj: unknown): unknown {
 
 export function saveProjectToFirebase(project: Project): void {
   authReady
-    .then(() => set(ref(db, PROJECT_REF), JSON.parse(JSON.stringify(project))))
     .then(() => {
-      setSyncStatus({ state: 'online', error: undefined, lastSyncedAt: Date.now() });
+      if (!currentUser) {
+        // Not signed in — do not push. State stays in localStorage only until
+        // the user authenticates.
+        return;
+      }
+      return set(ref(db, PROJECT_REF), JSON.parse(JSON.stringify(project)))
+        .then(() => {
+          setSyncStatus({ state: 'online', error: undefined, lastSyncedAt: Date.now() });
+        });
     })
     .catch((err) => {
       console.error('Firebase save failed:', err);
@@ -113,7 +156,12 @@ export function onProjectChange(callback: (project: Project | null) => void): ()
   let cancelled = false;
 
   authReady.then(() => {
-    if (cancelled) return;
+    if (cancelled || !currentUser) {
+      // Not signed in — don't subscribe. Caller should re-subscribe once
+      // the user authenticates.
+      callback(null);
+      return;
+    }
     unsubscribe = onValue(
       ref(db, PROJECT_REF),
       (snapshot) => {

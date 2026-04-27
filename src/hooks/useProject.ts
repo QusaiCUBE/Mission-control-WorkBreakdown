@@ -4,7 +4,7 @@ import { createInitialProject, recreateProject } from '../data/initialData';
 import { saveProject, loadProject, clearProject, exportProject, importProject } from '../utils/storage';
 import { getToday } from '../utils/dates';
 import { generateId } from '../utils/id';
-import { saveProjectToFirebase, onProjectChange } from '../utils/firebase';
+import { saveProjectToFirebase, onProjectChange, subscribeAuthState } from '../utils/firebase';
 
 function normalizeProject(project: Project): Project {
   const today = getToday();
@@ -111,19 +111,36 @@ export function useProject() {
   const isRemoteUpdate = useRef(false);
   const firebaseReady = useRef(false);
 
-  // Listen for Firebase — when it connects, use its data
+  // Subscribe to Firebase only while a user is signed in. When the auth user
+  // changes (login / logout), tear down the previous subscription and start a
+  // new one — otherwise post-login state never syncs.
   useEffect(() => {
-    const unsubscribe = onProjectChange((remoteProject) => {
-      if (remoteProject) {
-        isRemoteUpdate.current = true;
-        const normalized = normalizeProject(remoteProject);
-        setProject(normalized);
-        saveProject(normalized);
+    let dataUnsubscribe: (() => void) | null = null;
+
+    const authUnsubscribe = subscribeAuthState((user) => {
+      if (dataUnsubscribe) {
+        dataUnsubscribe();
+        dataUnsubscribe = null;
       }
-      // Mark Firebase as ready — now local changes can push
-      firebaseReady.current = true;
+      firebaseReady.current = false;
+
+      if (!user) return;
+
+      dataUnsubscribe = onProjectChange((remoteProject) => {
+        if (remoteProject) {
+          isRemoteUpdate.current = true;
+          const normalized = normalizeProject(remoteProject);
+          setProject(normalized);
+          saveProject(normalized);
+        }
+        firebaseReady.current = true;
+      });
     });
-    return unsubscribe;
+
+    return () => {
+      authUnsubscribe();
+      if (dataUnsubscribe) dataUnsubscribe();
+    };
   }, []);
 
   // Save locally always, but only push to Firebase AFTER first read

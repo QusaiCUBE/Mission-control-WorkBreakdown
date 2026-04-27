@@ -1,6 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useProject } from './hooks/useProject';
 import { useViewState } from './hooks/useViewState';
+import { useAuthUser } from './hooks/useAuthUser';
+import { signOut } from './utils/firebase';
 import LoginScreen from './components/auth/LoginScreen';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -15,30 +17,33 @@ import { getOverallProgress } from './utils/progress';
 import { daysBetween } from './utils/dates';
 import { getPermissions } from './utils/permissions';
 
-const AUTH_KEY = 'mc-auth-user';
-
 export default function App() {
-  const [user, setUser] = useState<string | null>(() => localStorage.getItem(AUTH_KEY));
+  const auth = useAuthUser();
   const projectHook = useProject();
   const { project } = projectHook;
   const viewState = useViewState();
   const { currentView, selectedModuleId, isDetailOpen } = viewState;
 
-  const handleLogin = useCallback((username: string) => {
-    localStorage.setItem(AUTH_KEY, username);
-    setUser(username);
-  }, []);
-
   const handleLogout = useCallback(() => {
-    localStorage.removeItem(AUTH_KEY);
-    setUser(null);
+    signOut().catch((err) => console.error('Sign out failed:', err));
   }, []);
 
-  if (!user) {
-    return <LoginScreen onLogin={handleLogin} />;
+  // Wait for Firebase to determine initial auth state — avoids a flash of the
+  // login screen for already-signed-in users.
+  if (!auth.ready) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-christian animate-pulse" />
+      </div>
+    );
   }
 
-  const perms = getPermissions(user);
+  if (!auth.user || !auth.username) {
+    return <LoginScreen />;
+  }
+
+  const username = auth.username;
+  const perms = getPermissions(username);
   const overallProgress = getOverallProgress(project.modules);
   const phaseDurations = project.phases.map((p) =>
     Math.round((daysBetween(p.startDate, p.endDate) + 1) / 7)
@@ -56,7 +61,7 @@ export default function App() {
       <Sidebar currentView={currentView} onViewChange={viewState.setCurrentView} hideSettings={!perms.canAccessSettings} />
 
       <div className="pl-16 lg:pl-56 transition-all duration-200">
-        <Header currentView={currentView} overallProgress={overallProgress} user={user} onLogout={handleLogout} />
+        <Header currentView={currentView} overallProgress={overallProgress} user={username} onLogout={handleLogout} />
 
         <main className="p-6">
           <div key={currentView} className="view-enter">
@@ -142,7 +147,7 @@ export default function App() {
             onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
             onAddLogEntry={
               perms.canEditNotes
-                ? (moduleId, date, text) => projectHook.addLogEntry(moduleId, date, text, user)
+                ? (moduleId, date, text) => projectHook.addLogEntry(moduleId, date, text, username)
                 : noopAny
             }
             onUpdateLogEntry={perms.canEditNotes ? projectHook.updateLogEntry : noopAny}
