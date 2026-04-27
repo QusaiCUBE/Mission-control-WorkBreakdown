@@ -70,6 +70,18 @@ export default function LoginScreen() {
         setError('Network error — check your connection.');
       } else if (code === 'auth/configuration-not-found') {
         setError('Email/Password sign-in is not enabled in Firebase. Ask the admin to enable it.');
+      } else if (code === 'auth/admin-restricted-operation') {
+        setError(
+          mode === 'signup'
+            ? 'Account creation is disabled for this project. Existing users can sign in above.'
+            : 'This operation is restricted by the admin.'
+        );
+      } else if (code === 'auth/password-does-not-meet-requirements') {
+        setError(
+          'Your password no longer meets the security policy. ' +
+          'Sign in with a compliant password, or ask the admin to reset your password ' +
+          'in the Firebase Console.'
+        );
       } else {
         setError(e.message || 'Sign-in failed.');
       }

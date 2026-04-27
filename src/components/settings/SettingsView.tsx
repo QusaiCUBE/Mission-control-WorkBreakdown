@@ -3,6 +3,7 @@ import DeveloperNameEditor from './DeveloperNameEditor';
 import ProjectDateEditor from './ProjectDateEditor';
 import DataExportImport from './DataExportImport';
 import ResetButton from './ResetButton';
+import ChangePassword from './ChangePassword';
 
 interface SettingsViewProps {
   developers: [Developer, Developer];
@@ -29,7 +30,11 @@ export default function SettingsView({
 }: SettingsViewProps) {
   return (
     <div className="max-w-2xl space-y-8">
-      <DeveloperNameEditor developers={developers} onUpdateName={onUpdateDeveloperName} />
+      <ChangePassword />
+
+      <div className="border-t border-border-primary pt-8">
+        <DeveloperNameEditor developers={developers} onUpdateName={onUpdateDeveloperName} />
+      </div>
 
       <div className="border-t border-border-primary pt-8">
         <ProjectDateEditor

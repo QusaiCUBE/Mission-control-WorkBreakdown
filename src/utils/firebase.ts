@@ -6,6 +6,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as fbSignOut,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
   User,
 } from 'firebase/auth';
 import { Project } from '../types';
@@ -92,6 +95,18 @@ export async function signUp(email: string, password: string): Promise<User> {
 
 export async function signOut(): Promise<void> {
   await fbSignOut(auth);
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  if (!currentUser || !currentUser.email) {
+    throw new Error('You must be signed in to change your password.');
+  }
+  // Re-authenticate before the sensitive operation. Firebase requires a recent
+  // credential check to update the password — without this, updatePassword can
+  // fail with auth/requires-recent-login.
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
 }
 
 // Track connection state via the realtime DB's built-in presence ref.
