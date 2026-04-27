@@ -1,6 +1,6 @@
 import { useRef, useCallback, useState } from 'react';
 import { Module, Developer, Phase } from '../../types';
-import { daysBetween, addDays, getToday, formatDate } from '../../utils/dates';
+import { daysBetween, addDays, getToday } from '../../utils/dates';
 import { getModuleProgress } from '../../utils/progress';
 
 interface GanttChartProps {
@@ -53,17 +53,33 @@ export default function GanttChart({
   const today = getToday();
   const todayX = dateToX(today, projectStartDate, dayWidth);
 
-  // Week grid lines
-  const weekLines: number[] = [];
-  for (let d = 7; d < totalDays; d += 7) {
-    weekLines.push(d * dayWidth);
+  // Daily grid lines — one per day so each day's column is visible
+  const dayLines: { x: number; isWeekStart: boolean }[] = [];
+  for (let d = 1; d < totalDays; d++) {
+    const date = new Date(projectStartDate + 'T00:00:00');
+    date.setDate(date.getDate() + d);
+    dayLines.push({ x: d * dayWidth, isWeekStart: date.getDay() === 1 });
   }
 
-  // Week labels
-  const weekLabels: { x: number; label: string }[] = [];
-  for (let d = 0; d < totalDays; d += 7) {
-    const weekDate = addDays(projectStartDate, d);
-    weekLabels.push({ x: d * dayWidth, label: formatDate(weekDate) });
+  // Month labels — one label at the first day of each month within the range
+  const monthLabels: { x: number; label: string }[] = [];
+  {
+    const start = new Date(projectStartDate + 'T00:00:00');
+    // First label always at x=0 showing the start month
+    monthLabels.push({
+      x: 0,
+      label: start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    });
+    for (let d = 1; d < totalDays; d++) {
+      const date = new Date(projectStartDate + 'T00:00:00');
+      date.setDate(date.getDate() + d);
+      if (date.getDate() === 1) {
+        monthLabels.push({
+          x: d * dayWidth,
+          label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        });
+      }
+    }
   }
 
   const handleMouseDown = useCallback(
@@ -148,9 +164,17 @@ export default function GanttChart({
         );
       })}
 
-      {/* Week grid lines */}
-      {weekLines.map((x, i) => (
-        <line key={i} x1={x} y1={0} x2={x} y2={svgHeight} stroke="#2D3348" strokeWidth="1" />
+      {/* Daily grid lines — faint per day, slightly stronger at week starts */}
+      {dayLines.map(({ x, isWeekStart }, i) => (
+        <line
+          key={i}
+          x1={x}
+          y1={0}
+          x2={x}
+          y2={svgHeight}
+          stroke={isWeekStart ? '#2D3348' : '#2D334855'}
+          strokeWidth="1"
+        />
       ))}
 
       {/* Row separators */}
@@ -166,9 +190,9 @@ export default function GanttChart({
         />
       ))}
 
-      {/* Header: week labels */}
-      {weekLabels.map(({ x, label }, i) => (
-        <text key={i} x={x + 4} y={26} className="text-[10px]" fill="#6B7280">
+      {/* Header: month labels */}
+      {monthLabels.map(({ x, label }, i) => (
+        <text key={i} x={x + 4} y={26} className="text-[10px] font-medium" fill="#9CA3AF">
           {label}
         </text>
       ))}
