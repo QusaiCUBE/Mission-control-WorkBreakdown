@@ -70,7 +70,7 @@ const ROLE_PERMISSIONS: Record<Role, Permissions> = {
 
 const USER_ROLES: Record<string, Role> = {
   qusai: 'admin',
-  christian: 'regular',
+  christian: 'admin',
   justin: 'viewer',
 };
 
