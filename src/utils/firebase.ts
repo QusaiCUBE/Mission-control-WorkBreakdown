@@ -19,9 +19,31 @@ const auth = getAuth(app);
 
 const PROJECT_REF = 'project';
 
+// === Sync status broadcasting ===
+export type SyncState = 'connecting' | 'online' | 'offline' | 'error';
+export interface SyncStatus {
+  state: SyncState;
+  error?: string;
+  lastSyncedAt?: number;
+}
+
+let currentStatus: SyncStatus = { state: 'connecting' };
+const statusListeners = new Set<(s: SyncStatus) => void>();
+
+function setSyncStatus(patch: Partial<SyncStatus>): void {
+  currentStatus = { ...currentStatus, ...patch };
+  statusListeners.forEach((cb) => cb(currentStatus));
+}
+
+export function subscribeSyncStatus(cb: (s: SyncStatus) => void): () => void {
+  cb(currentStatus);
+  statusListeners.add(cb);
+  return () => { statusListeners.delete(cb); };
+}
+
 // Sign in anonymously so Firebase rules can require `auth != null`.
 // All DB ops wait on this promise to avoid permission-denied races.
-const authReady: Promise<void> = new Promise((resolve) => {
+const authReady: Promise<void> = new Promise((resolve, reject) => {
   const unsub = onAuthStateChanged(auth, (user) => {
     if (user) {
       unsub();
@@ -30,8 +52,25 @@ const authReady: Promise<void> = new Promise((resolve) => {
   });
   signInAnonymously(auth).catch((err) => {
     console.error('Firebase anonymous auth failed:', err);
+    setSyncStatus({ state: 'error', error: `Auth failed: ${err.code || err.message}` });
+    reject(err);
   });
 });
+
+// Track connection state via the realtime DB's built-in presence ref
+authReady
+  .then(() => {
+    onValue(ref(db, '.info/connected'), (snap) => {
+      if (snap.val() === true) {
+        setSyncStatus({ state: 'online', error: undefined });
+      } else {
+        setSyncStatus({ state: 'offline' });
+      }
+    });
+  })
+  .catch(() => {
+    // Already reported via setSyncStatus
+  });
 
 // Firebase converts arrays to objects with numeric keys.
 // This recursively converts them back to arrays.
@@ -60,8 +99,12 @@ function fixArrays(obj: unknown): unknown {
 export function saveProjectToFirebase(project: Project): void {
   authReady
     .then(() => set(ref(db, PROJECT_REF), JSON.parse(JSON.stringify(project))))
+    .then(() => {
+      setSyncStatus({ state: 'online', error: undefined, lastSyncedAt: Date.now() });
+    })
     .catch((err) => {
       console.error('Firebase save failed:', err);
+      setSyncStatus({ state: 'error', error: `Save failed: ${err.code || err.message}` });
     });
 }
 
@@ -106,6 +149,8 @@ export function onProjectChange(callback: (project: Project | null) => void): ()
       },
       (error) => {
         console.error('Firebase read failed:', error);
+        const err = error as Error & { code?: string };
+        setSyncStatus({ state: 'error', error: `Read failed: ${err.code || err.message}` });
         callback(null);
       }
     );

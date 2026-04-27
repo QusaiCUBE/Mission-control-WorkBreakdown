@@ -1,5 +1,6 @@
 import { ViewName } from '../../types';
 import { VIEW_LABELS } from '../../constants';
+import SyncIndicator from './SyncIndicator';
 
 interface HeaderProps {
   currentView: ViewName;
@@ -15,6 +16,7 @@ export default function Header({ currentView, overallProgress, user, onLogout }:
         <h1 className="text-lg font-semibold text-white">{VIEW_LABELS[currentView]}</h1>
       </div>
       <div className="flex items-center gap-4">
+        <SyncIndicator />
         <div className="flex items-center gap-2 text-sm">
           <span className="text-gray-400">Overall</span>
           <div className="w-32 h-2 bg-bg-tertiary rounded-full overflow-hidden">
