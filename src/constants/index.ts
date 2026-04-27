@@ -5,7 +5,6 @@ export const VIEW_LABELS: Record<ViewName, string> = {
   board: 'Board',
   timeline: 'Timeline',
   workload: 'Workload',
-  map: 'Integration Map',
   settings: 'Settings',
 };
 

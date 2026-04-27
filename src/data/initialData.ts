@@ -117,7 +117,6 @@ export function createInitialProject(startDate: string): Project {
     ],
     phases,
     modules,
-    integrationMap: { nodes: [], connections: [] },
   };
 }
 
@@ -134,6 +133,5 @@ export function recreateProject(startDate: string, durations?: number[]): Projec
     ],
     phases,
     modules,
-    integrationMap: { nodes: [], connections: [] },
   };
 }

@@ -10,7 +10,6 @@ import BoardView from './components/board/BoardView';
 import TimelineView from './components/timeline/TimelineView';
 import WorkloadView from './components/workload/WorkloadView';
 import SettingsView from './components/settings/SettingsView';
-import IntegrationMapView from './components/map/IntegrationMapView';
 import ModuleDetail from './components/detail/ModuleDetail';
 import { getOverallProgress } from './utils/progress';
 import { daysBetween } from './utils/dates';
@@ -105,14 +104,6 @@ export default function App() {
               projectStartDate={project.startDate}
               onModuleClick={viewState.openModuleDetail}
               onAssignModule={perms.canAssign ? projectHook.assignModule : noopAny}
-            />
-          )}
-
-          {currentView === 'map' && (
-            <IntegrationMapView
-              map={project.integrationMap}
-              onUpdateMap={perms.canEditModules ? projectHook.updateIntegrationMap : noopAny}
-              readOnly={!perms.canEditModules}
             />
           )}
 

@@ -97,23 +97,8 @@ export function onProjectChange(callback: (project: Project | null) => void): ()
               (m as any).progress = seed[m.status as keyof typeof seed] ?? 0;
             }
           }
-          // Ensure integrationMap exists with arrays
-          if (!fixed.integrationMap) fixed.integrationMap = { nodes: [], connections: [] };
-          if (!Array.isArray(fixed.integrationMap.nodes)) fixed.integrationMap.nodes = [];
-          if (!Array.isArray(fixed.integrationMap.connections)) fixed.integrationMap.connections = [];
-          // Normalize map node fields
-          fixed.integrationMap.nodes = fixed.integrationMap.nodes.map((n: any) => ({
-            ...n,
-            width: n.width || 150,
-            height: n.height || 56,
-            subtitle: n.subtitle || '',
-          }));
-          fixed.integrationMap.connections = fixed.integrationMap.connections.map((c: any) => ({
-            ...c,
-            fromAnchor: c.fromAnchor || 'right',
-            toAnchor: c.toAnchor || 'left',
-            style: c.style || 'solid',
-          }));
+          // Drop legacy integrationMap field if present
+          delete (fixed as { integrationMap?: unknown }).integrationMap;
           callback(fixed);
         } else {
           callback(null);

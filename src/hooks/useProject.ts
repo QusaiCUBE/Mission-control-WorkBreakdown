@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, IntegrationMap, DailyLogEntry } from '../types';
+import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, DailyLogEntry } from '../types';
 import { createInitialProject, recreateProject } from '../data/initialData';
 import { saveProject, loadProject, clearProject, exportProject, importProject } from '../utils/storage';
-import { createDefaultERPMap } from '../data/erpMapData';
 import { getToday } from '../utils/dates';
 import { generateId } from '../utils/id';
 import { saveProjectToFirebase, onProjectChange } from '../utils/firebase';
@@ -96,14 +95,14 @@ function normalizeProject(project: Project): Project {
     ? sortedPhases[0].startDate
     : project.startDate;
 
-  // Migration: seed integrationMap with default ERP map if empty
-  let integrationMap = project.integrationMap || { nodes: [], connections: [] };
-  if (!project.integrationMap || !Array.isArray(integrationMap.nodes) || integrationMap.nodes.length === 0) {
-    integrationMap = createDefaultERPMap();
+  // Migration: drop legacy integrationMap field if present
+  if ('integrationMap' in (project as unknown as Record<string, unknown>)) {
     changed = true;
+    const { integrationMap: _drop, ...rest } = project as Project & { integrationMap?: unknown };
+    project = rest as Project;
   }
 
-  return changed ? { ...project, modules, startDate, integrationMap } : project;
+  return changed ? { ...project, modules, startDate } : project;
 }
 
 export function useProject() {
@@ -486,10 +485,6 @@ export function useProject() {
     });
   }, []);
 
-  const updateIntegrationMap = useCallback((integrationMap: IntegrationMap) => {
-    setProject((prev) => ({ ...prev, integrationMap }));
-  }, []);
-
   const exportData = useCallback(() => {
     return exportProject(project);
   }, [project]);
@@ -525,7 +520,6 @@ export function useProject() {
     updateLogEntry,
     removeLogEntry,
     reorderModules,
-    updateIntegrationMap,
     resetProject,
     exportData,
   };
