@@ -53,22 +53,38 @@ export default function GanttChart({
   const today = getToday();
   const todayX = dateToX(today, projectStartDate, dayWidth);
 
-  // Daily grid lines — one per day so each day's column is visible
-  const dayLines: { x: number; isWeekStart: boolean }[] = [];
-  for (let d = 1; d < totalDays; d++) {
+  // Day step for labels: at low zoom, show every Nth day so numbers don't collide
+  const dayLabelStep = dayWidth >= 18 ? 1 : dayWidth >= 12 ? 2 : dayWidth >= 8 ? 5 : 7;
+
+  // Daily grid lines + per-day labels
+  const dayLines: { x: number; isWeekStart: boolean; isMonthStart: boolean }[] = [];
+  const dayLabels: { x: number; label: string }[] = [];
+  for (let d = 0; d < totalDays; d++) {
     const date = new Date(projectStartDate + 'T00:00:00');
     date.setDate(date.getDate() + d);
-    dayLines.push({ x: d * dayWidth, isWeekStart: date.getDay() === 1 });
+    const dayOfMonth = date.getDate();
+    const isMonthStart = dayOfMonth === 1;
+    if (d > 0) {
+      dayLines.push({
+        x: d * dayWidth,
+        isWeekStart: date.getDay() === 1,
+        isMonthStart,
+      });
+    }
+    if (isMonthStart || dayOfMonth % dayLabelStep === 0 || d === 0) {
+      dayLabels.push({ x: d * dayWidth + dayWidth / 2, label: String(dayOfMonth) });
+    }
   }
 
-  // Month labels — one label at the first day of each month within the range
+  // Month labels — one label at the first day of each month within the range.
+  // Drop the year so we don't repeat "April 2026" visually; year context lives
+  // in the timeline range header above the chart.
   const monthLabels: { x: number; label: string }[] = [];
   {
     const start = new Date(projectStartDate + 'T00:00:00');
-    // First label always at x=0 showing the start month
     monthLabels.push({
       x: 0,
-      label: start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      label: start.toLocaleDateString('en-US', { month: 'long' }),
     });
     for (let d = 1; d < totalDays; d++) {
       const date = new Date(projectStartDate + 'T00:00:00');
@@ -76,7 +92,7 @@ export default function GanttChart({
       if (date.getDate() === 1) {
         monthLabels.push({
           x: d * dayWidth,
-          label: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          label: date.toLocaleDateString('en-US', { month: 'long' }),
         });
       }
     }
@@ -154,8 +170,8 @@ export default function GanttChart({
             {/* Phase name at the top */}
             <text
               x={x + 6}
-              y={14}
-              className="text-[9px] font-medium"
+              y={10}
+              className="text-[8px] font-medium"
               fill={borderColor.replace('40', 'AA')}
             >
               {phase.name}
@@ -164,15 +180,15 @@ export default function GanttChart({
         );
       })}
 
-      {/* Daily grid lines — faint per day, slightly stronger at week starts */}
-      {dayLines.map(({ x, isWeekStart }, i) => (
+      {/* Daily grid lines — faint per day, stronger at week and month starts */}
+      {dayLines.map(({ x, isWeekStart, isMonthStart }, i) => (
         <line
           key={i}
           x1={x}
           y1={0}
           x2={x}
           y2={svgHeight}
-          stroke={isWeekStart ? '#2D3348' : '#2D334855'}
+          stroke={isMonthStart ? '#4B5563' : isWeekStart ? '#2D3348' : '#2D334855'}
           strokeWidth="1"
         />
       ))}
@@ -190,9 +206,23 @@ export default function GanttChart({
         />
       ))}
 
-      {/* Header: month labels */}
+      {/* Header: month labels (top row) */}
       {monthLabels.map(({ x, label }, i) => (
-        <text key={i} x={x + 4} y={26} className="text-[10px] font-medium" fill="#9CA3AF">
+        <text key={i} x={x + 4} y={22} className="text-[10px] font-semibold" fill="#9CA3AF">
+          {label}
+        </text>
+      ))}
+
+      {/* Header: day-of-month numbers (bottom row), centered in each day cell */}
+      {dayLabels.map(({ x, label }, i) => (
+        <text
+          key={i}
+          x={x}
+          y={35}
+          textAnchor="middle"
+          className="text-[9px]"
+          fill="#6B7280"
+        >
           {label}
         </text>
       ))}
