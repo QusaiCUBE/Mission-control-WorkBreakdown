@@ -1,6 +1,7 @@
 import { Module, Developer, Priority } from '../../types';
 import ProgressBar from '../shared/ProgressBar';
 import StatusBadge from '../shared/StatusBadge';
+import PriorityBadge from '../shared/PriorityBadge';
 import { getModuleProgress } from '../../utils/progress';
 import { isOverdue } from '../../utils/dates';
 
@@ -64,9 +65,12 @@ export default function DeveloperColumn({ developer, modules, onModuleClick }: D
                 className="w-full p-3 bg-bg-secondary border border-border-primary rounded-lg hover:border-gray-500 transition-colors text-left"
                 style={{ borderLeftWidth: '3px', borderLeftColor: developer.color }}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-white font-medium">{module.name}</span>
-                  <StatusBadge status={module.status} isOverdue={overdue} />
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-sm text-white font-medium truncate">{module.name}</span>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <StatusBadge status={module.status} isOverdue={overdue} />
+                    <PriorityBadge priority={module.priority} />
+                  </div>
                 </div>
                 <ProgressBar value={progress} size="sm" color={developer.color} />
                 <span className="text-xs text-gray-500 mt-1 block">
