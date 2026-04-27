@@ -41,14 +41,22 @@ export default function SyncIndicator() {
 
   return (
     <div
-      className="flex items-center gap-1.5 text-xs text-gray-400"
+      className="flex items-center gap-1.5 text-xs text-gray-400 max-w-[420px]"
       title={config.title}
     >
       <span
-        className={`w-2 h-2 rounded-full ${status.state === 'connecting' ? 'animate-pulse' : ''}`}
+        className={`w-2 h-2 rounded-full flex-shrink-0 ${status.state === 'connecting' ? 'animate-pulse' : ''}`}
         style={{ backgroundColor: config.color }}
       />
-      <span className="hidden md:inline">{config.label}</span>
+      <span className="hidden md:inline whitespace-nowrap">{config.label}</span>
+      {status.state === 'error' && status.error && (
+        <span
+          className="hidden lg:inline text-[10px] text-status-overdue truncate"
+          style={{ maxWidth: 320 }}
+        >
+          — {status.error}
+        </span>
+      )}
     </div>
   );
 }
