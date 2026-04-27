@@ -21,24 +21,24 @@ export default function DashboardView({ project, onModuleClick, onUpdatePhase, o
         <PhaseTimeline phases={project.phases} projectStartDate={project.startDate} onUpdatePhase={onUpdatePhase} onAddPhase={onAddPhase} onRemovePhase={onRemovePhase} readOnly={readOnly} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="animate-fade-up-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+        <div className="animate-fade-up-1 h-full">
           <OverallProgress modules={project.modules} />
         </div>
-        <div className="animate-fade-up-2">
+        <div className="animate-fade-up-2 h-full">
           <WorkloadSplit modules={project.modules} developers={project.developers} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 animate-fade-up-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="lg:col-span-2 animate-fade-up-3 h-full">
           <ModuleStatusGrid
             modules={project.modules}
             developers={project.developers}
             onModuleClick={onModuleClick}
           />
         </div>
-        <div className="animate-fade-up-4">
+        <div className="animate-fade-up-4 h-full">
           <UpcomingDeadlines
             modules={project.modules}
             developers={project.developers}

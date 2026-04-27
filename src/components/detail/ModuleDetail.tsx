@@ -1,9 +1,6 @@
-import { Module, Developer, Priority, RequiredDocument, Attachment, DailyLogEntry } from '../../types';
+import { Module, Developer, Priority, DailyLogEntry } from '../../types';
 import StatusBadge from '../shared/StatusBadge';
 import Slider from '../shared/Slider';
-import RequiredDocuments from './RequiredDocuments';
-import FileAttachments from './FileAttachments';
-import ModuleNotes from './ModuleNotes';
 import ModuleMetadata from './ModuleMetadata';
 import StatusHistory from './StatusHistory';
 import DailyLog from './DailyLog';
@@ -15,14 +12,8 @@ interface ModuleDetailProps {
   onClose: () => void;
   onUpdateModule: (moduleId: string, updates: Partial<Module>) => void;
   onAssignModule: (moduleId: string, devId: string | null) => void;
-  onUpdateNotes: (moduleId: string, notes: string) => void;
   onUpdatePriority: (moduleId: string, priority: Priority) => void;
   onUpdateProgress: (moduleId: string, progress: number) => void;
-  onAddDocument: (moduleId: string, doc: RequiredDocument) => void;
-  onUpdateDocument: (moduleId: string, docId: string, updates: Partial<RequiredDocument>) => void;
-  onRemoveDocument: (moduleId: string, docId: string) => void;
-  onAddAttachment: (moduleId: string, attachment: Attachment) => void;
-  onRemoveAttachment: (moduleId: string, attachmentId: string) => void;
   onAddLogEntry: (moduleId: string, date: string, text: string) => void;
   onUpdateLogEntry: (
     moduleId: string,
@@ -39,14 +30,8 @@ export default function ModuleDetail({
   onClose,
   onUpdateModule,
   onAssignModule,
-  onUpdateNotes,
   onUpdatePriority,
   onUpdateProgress,
-  onAddDocument,
-  onUpdateDocument,
-  onRemoveDocument,
-  onAddAttachment,
-  onRemoveAttachment,
   onAddLogEntry,
   onUpdateLogEntry,
   onRemoveLogEntry,
@@ -95,16 +80,6 @@ export default function ModuleDetail({
 
         <div className="flex items-center gap-3">
           <StatusBadge status={module.status} isOverdue={overdue} />
-          {module.documents.length > 0 && (
-            <span className="text-xs text-gray-500">
-              {module.documents.filter((d) => d.status === 'received').length}/{module.documents.length} docs
-            </span>
-          )}
-          {module.attachments.length > 0 && (
-            <span className="text-xs text-gray-500">
-              {module.attachments.length} file{module.attachments.length !== 1 ? 's' : ''}
-            </span>
-          )}
         </div>
       </div>
 
@@ -132,38 +107,12 @@ export default function ModuleDetail({
         />
 
         <div className="border-t border-border-primary pt-6">
-          <RequiredDocuments
-            documents={module.documents}
-            moduleId={module.id}
-            onAdd={onAddDocument}
-            onUpdate={onUpdateDocument}
-            onRemove={onRemoveDocument}
-          />
-        </div>
-
-        <div className="border-t border-border-primary pt-6">
-          <FileAttachments
-            attachments={module.attachments}
-            moduleId={module.id}
-            onAdd={onAddAttachment}
-            onRemove={onRemoveAttachment}
-          />
-        </div>
-
-        <div className="border-t border-border-primary pt-6">
           <DailyLog
             entries={module.dailyLog ?? []}
             onAdd={(date, text) => onAddLogEntry(module.id, date, text)}
             onUpdate={(entryId, updates) => onUpdateLogEntry(module.id, entryId, updates)}
             onRemove={(entryId) => onRemoveLogEntry(module.id, entryId)}
             readOnly={readOnly}
-          />
-        </div>
-
-        <div className="border-t border-border-primary pt-6">
-          <ModuleNotes
-            notes={module.notes}
-            onChange={(notes) => onUpdateNotes(module.id, notes)}
           />
         </div>
 

@@ -138,14 +138,8 @@ export default function App() {
             onClose={viewState.closeModuleDetail}
             onUpdateModule={perms.canEditModules ? projectHook.updateModule : noopAny}
             onAssignModule={perms.canAssign ? projectHook.assignModule : noopAny}
-            onUpdateNotes={perms.canEditNotes ? projectHook.updateModuleNotes : noopAny}
             onUpdatePriority={perms.canEditModules ? projectHook.updateModulePriority : noopAny}
             onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
-            onAddDocument={perms.canEditDocuments ? projectHook.addDocument : noopAny}
-            onUpdateDocument={perms.canEditDocuments ? projectHook.updateDocument : () => {}}
-            onRemoveDocument={perms.canEditDocuments ? projectHook.removeDocument : noopAny}
-            onAddAttachment={perms.canAttachFiles ? projectHook.addAttachment : noopAny}
-            onRemoveAttachment={perms.canAttachFiles ? projectHook.removeAttachment : noopAny}
             onAddLogEntry={
               perms.canEditNotes
                 ? (moduleId, date, text) => projectHook.addLogEntry(moduleId, date, text, user)

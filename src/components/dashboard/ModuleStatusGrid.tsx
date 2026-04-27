@@ -16,10 +16,10 @@ export default function ModuleStatusGrid({ modules, developers, onModuleClick }:
   );
 
   return (
-    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5">
+    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5 h-full flex flex-col">
       <h3 className="text-sm font-semibold text-white mb-4">Modules at a Glance</h3>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 flex-1 content-start">
         {sortedModules.map((module, idx) => {
           const progress = getModuleProgress(module);
           const overdue = isOverdue(module.dueDate) && module.status !== 'done';

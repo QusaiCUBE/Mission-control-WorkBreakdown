@@ -27,7 +27,6 @@ export default function ModuleCard({
   const assignedDev = isBoth ? null : developers.find((d) => d.id === module.assignedTo);
   const progress = getModuleProgress(module);
   const overdue = isOverdue(module.dueDate) && module.status !== 'done';
-  const docsNeeded = module.documents.filter((d) => d.status === 'needed').length;
   const leftColor = isBoth ? '#8B5CF6' : (assignedDev?.color || '#6B7280');
 
   return (
@@ -60,9 +59,6 @@ export default function ModuleCard({
             <DeveloperAvatar name={assignedDev.name} color={assignedDev.color} />
           ) : (
             <span className="text-xs text-gray-500">Unassigned</span>
-          )}
-          {docsNeeded > 0 && (
-            <span className="text-xs text-status-overdue">{docsNeeded} doc{docsNeeded > 1 ? 's' : ''} needed</span>
           )}
         </div>
 

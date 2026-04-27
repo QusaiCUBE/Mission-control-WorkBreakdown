@@ -20,7 +20,7 @@ export default function WorkloadSplit({ modules, developers }: WorkloadSplitProp
   const unassignedCount = modules.filter((m) => !m.assignedTo).length;
 
   return (
-    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5">
+    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5 h-full flex flex-col">
       <h3 className="text-sm font-semibold text-white mb-4">Workload Split</h3>
 
       {/* Stacked bar */}
@@ -45,7 +45,7 @@ export default function WorkloadSplit({ modules, developers }: WorkloadSplitProp
       </div>
 
       {/* Legend */}
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 space-y-2 flex-1">
         {devStats.map(({ dev, moduleCount }) => (
           <div key={dev.id} className="flex items-center justify-between">
             <div className="flex items-center gap-2">

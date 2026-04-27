@@ -20,13 +20,13 @@ export default function UpcomingDeadlines({ modules, developers, onModuleClick }
     .slice(0, 5);
 
   return (
-    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5">
+    <div className="bg-bg-secondary border border-border-primary rounded-xl p-5 h-full flex flex-col">
       <h3 className="text-sm font-semibold text-white mb-4">Upcoming Deadlines</h3>
 
       {upcoming.length === 0 ? (
         <p className="text-xs text-gray-500">No upcoming deadlines</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1">
           {upcoming.map((module) => {
             const daysLeft = daysBetween(today, module.dueDate!);
             const isOverdue = daysLeft < 0;
