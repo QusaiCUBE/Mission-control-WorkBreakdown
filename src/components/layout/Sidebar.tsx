@@ -5,6 +5,8 @@ interface SidebarProps {
   currentView: ViewName;
   onViewChange: (view: ViewName) => void;
   hideSettings?: boolean;
+  username?: string;
+  onLogout?: () => void;
 }
 
 const VIEW_ICONS: Record<ViewName, JSX.Element> = {
@@ -51,7 +53,7 @@ const VIEW_ICONS: Record<ViewName, JSX.Element> = {
 
 const VIEWS: ViewName[] = ['dashboard', 'board', 'timeline', 'workload', 'settings'];
 
-export default function Sidebar({ currentView, onViewChange, hideSettings }: SidebarProps) {
+export default function Sidebar({ currentView, onViewChange, hideSettings, username, onLogout }: SidebarProps) {
   const views = hideSettings ? VIEWS.filter((v) => v !== 'settings') : VIEWS;
   return (
     <aside className="fixed left-0 top-0 h-screen w-16 lg:w-56 bg-bg-secondary border-r border-border-primary flex flex-col z-30 transition-all duration-200">
@@ -64,7 +66,7 @@ export default function Sidebar({ currentView, onViewChange, hideSettings }: Sid
         </span>
       </div>
 
-      <nav className="flex-1 py-4 space-y-1 px-2">
+      <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
         {views.map((view) => (
           <button
             key={view}
@@ -80,6 +82,31 @@ export default function Sidebar({ currentView, onViewChange, hideSettings }: Sid
           </button>
         ))}
       </nav>
+
+      {onLogout && (
+        <div className="border-t border-border-primary p-2">
+          {username && (
+            <div className="hidden lg:flex items-center px-2 pb-2 pt-1">
+              <div className="w-7 h-7 rounded-full bg-bg-tertiary flex items-center justify-center text-xs font-semibold text-gray-300 flex-shrink-0">
+                {username.slice(0, 1).toUpperCase()}
+              </div>
+              <span className="ml-2 text-xs text-gray-300 capitalize truncate">{username}</span>
+            </div>
+          )}
+          <button
+            onClick={onLogout}
+            title="Sign out"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-status-overdue hover:bg-bg-tertiary transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 flex-shrink-0">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span className="hidden lg:block">Sign Out</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

@@ -58,10 +58,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg-primary text-gray-200">
-      <Sidebar currentView={currentView} onViewChange={viewState.setCurrentView} hideSettings={!perms.canAccessSettings} />
+      <Sidebar
+        currentView={currentView}
+        onViewChange={viewState.setCurrentView}
+        hideSettings={!perms.canAccessSettings}
+        username={username}
+        onLogout={handleLogout}
+      />
 
       <div className="pl-16 lg:pl-56 transition-all duration-200">
-        <Header currentView={currentView} overallProgress={overallProgress} user={username} onLogout={handleLogout} />
+        <Header currentView={currentView} overallProgress={overallProgress} />
 
         <main className="p-6">
           <div key={currentView} className="view-enter">

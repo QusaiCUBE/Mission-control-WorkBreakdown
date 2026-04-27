@@ -188,8 +188,8 @@ export function onProjectChange(callback: (project: Project | null) => void): ()
           if (!Array.isArray(fixed.phases)) fixed.phases = [];
           if (!Array.isArray(fixed.developers)) {
             fixed.developers = [
-              { id: 'dev-christian', name: 'Christian', color: '#0984E3' },
-              { id: 'dev-qusai', name: 'Qusai', color: '#0ABAB5' },
+              { id: 'dev-christian', name: 'Christian', color: '#1E3A8A' },
+              { id: 'dev-qusai', name: 'Qusai', color: '#881337' },
             ];
           }
           for (const m of fixed.modules) {

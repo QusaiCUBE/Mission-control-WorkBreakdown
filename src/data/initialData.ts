@@ -112,8 +112,8 @@ export function createInitialProject(startDate: string): Project {
     name: 'Mission Control — ERP Integration',
     startDate,
     developers: [
-      { id: 'dev-christian', name: 'Christian', color: '#0984E3' },
-      { id: 'dev-qusai', name: 'TBD', color: '#0ABAB5' },
+      { id: 'dev-christian', name: 'Christian', color: '#1E3A8A' },
+      { id: 'dev-qusai', name: 'TBD', color: '#881337' },
     ],
     phases,
     modules,
@@ -128,8 +128,8 @@ export function recreateProject(startDate: string, durations?: number[]): Projec
     name: 'Mission Control — ERP Integration',
     startDate,
     developers: [
-      { id: 'dev-christian', name: 'Christian', color: '#0984E3' },
-      { id: 'dev-qusai', name: 'TBD', color: '#0ABAB5' },
+      { id: 'dev-christian', name: 'Christian', color: '#1E3A8A' },
+      { id: 'dev-qusai', name: 'TBD', color: '#881337' },
     ],
     phases,
     modules,
