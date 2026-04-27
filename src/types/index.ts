@@ -52,6 +52,14 @@ export interface StatusChange {
   by: string;
 }
 
+export interface DailyLogEntry {
+  id: string;
+  date: string;       // YYYY-MM-DD — the day this entry is logged against
+  text: string;
+  createdAt: string;  // ISO timestamp for ordering within a day
+  author: string;     // username who wrote it
+}
+
 export interface Module {
   id: string;
   name: string;
@@ -71,6 +79,7 @@ export interface Module {
   notes: string;
   statusHistory: StatusChange[];
   dependencies: string[];
+  dailyLog: DailyLogEntry[];
 }
 
 export interface MapNode {

@@ -155,6 +155,13 @@ export default function App() {
             onRemoveDocument={perms.canEditDocuments ? projectHook.removeDocument : noopAny}
             onAddAttachment={perms.canAttachFiles ? projectHook.addAttachment : noopAny}
             onRemoveAttachment={perms.canAttachFiles ? projectHook.removeAttachment : noopAny}
+            onAddLogEntry={
+              perms.canEditNotes
+                ? (moduleId, date, text) => projectHook.addLogEntry(moduleId, date, text, user)
+                : noopAny
+            }
+            onUpdateLogEntry={perms.canEditNotes ? projectHook.updateLogEntry : noopAny}
+            onRemoveLogEntry={perms.canEditNotes ? projectHook.removeLogEntry : noopAny}
             readOnly={!perms.canEditModules}
           />
         )}

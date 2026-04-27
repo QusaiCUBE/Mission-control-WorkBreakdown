@@ -71,6 +71,7 @@ function createModules(phases: Phase[]): Module[] {
       notes: '',
       statusHistory: [],
       dependencies: [],
+      dailyLog: [],
     });
   });
 
@@ -97,6 +98,7 @@ function createModules(phases: Phase[]): Module[] {
     notes: '',
     statusHistory: [],
     dependencies: phase1ModuleIds,
+    dailyLog: [],
   });
 
   return modules;

@@ -1,4 +1,4 @@
-import { Module, Developer, Priority, RequiredDocument, Attachment } from '../../types';
+import { Module, Developer, Priority, RequiredDocument, Attachment, DailyLogEntry } from '../../types';
 import StatusBadge from '../shared/StatusBadge';
 import Slider from '../shared/Slider';
 import RequiredDocuments from './RequiredDocuments';
@@ -6,6 +6,7 @@ import FileAttachments from './FileAttachments';
 import ModuleNotes from './ModuleNotes';
 import ModuleMetadata from './ModuleMetadata';
 import StatusHistory from './StatusHistory';
+import DailyLog from './DailyLog';
 import { isOverdue } from '../../utils/dates';
 
 interface ModuleDetailProps {
@@ -22,6 +23,13 @@ interface ModuleDetailProps {
   onRemoveDocument: (moduleId: string, docId: string) => void;
   onAddAttachment: (moduleId: string, attachment: Attachment) => void;
   onRemoveAttachment: (moduleId: string, attachmentId: string) => void;
+  onAddLogEntry: (moduleId: string, date: string, text: string) => void;
+  onUpdateLogEntry: (
+    moduleId: string,
+    entryId: string,
+    updates: Partial<Pick<DailyLogEntry, 'text' | 'date'>>
+  ) => void;
+  onRemoveLogEntry: (moduleId: string, entryId: string) => void;
   readOnly?: boolean;
 }
 
@@ -39,6 +47,9 @@ export default function ModuleDetail({
   onRemoveDocument,
   onAddAttachment,
   onRemoveAttachment,
+  onAddLogEntry,
+  onUpdateLogEntry,
+  onRemoveLogEntry,
   readOnly,
 }: ModuleDetailProps) {
   const overdue = isOverdue(module.dueDate) && module.status !== 'done';
@@ -136,6 +147,16 @@ export default function ModuleDetail({
             moduleId={module.id}
             onAdd={onAddAttachment}
             onRemove={onRemoveAttachment}
+          />
+        </div>
+
+        <div className="border-t border-border-primary pt-6">
+          <DailyLog
+            entries={module.dailyLog ?? []}
+            onAdd={(date, text) => onAddLogEntry(module.id, date, text)}
+            onUpdate={(entryId, updates) => onUpdateLogEntry(module.id, entryId, updates)}
+            onRemove={(entryId) => onRemoveLogEntry(module.id, entryId)}
+            readOnly={readOnly}
           />
         </div>
 

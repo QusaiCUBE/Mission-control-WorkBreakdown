@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, IntegrationMap } from '../types';
+import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, IntegrationMap, DailyLogEntry } from '../types';
 import { createInitialProject, recreateProject } from '../data/initialData';
 import { saveProject, loadProject, clearProject, exportProject, importProject } from '../utils/storage';
 import { createDefaultERPMap } from '../data/erpMapData';
@@ -46,11 +46,12 @@ function normalizeProject(project: Project): Project {
     changed = true;
   }
 
-  // Migration: add documents and attachments arrays to modules that don't have them
+  // Migration: add documents, attachments, and dailyLog arrays to modules that don't have them
   modules = modules.map((m) => {
     let mod = m;
     if (!mod.documents) { changed = true; mod = { ...mod, documents: [] }; }
     if (!mod.attachments) { changed = true; mod = { ...mod, attachments: [] }; }
+    if (!mod.dailyLog) { changed = true; mod = { ...mod, dailyLog: [] }; }
     return mod;
   });
 
@@ -165,6 +166,7 @@ export function useProject() {
           notes: '',
           statusHistory: [],
           dependencies: [],
+          dailyLog: [],
         },
       ],
     }));
@@ -340,6 +342,57 @@ export function useProject() {
     }));
   }, []);
 
+  const addLogEntry = useCallback(
+    (moduleId: string, date: string, text: string, author: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const entry: DailyLogEntry = {
+        id: generateId(),
+        date,
+        text: trimmed,
+        createdAt: new Date().toISOString(),
+        author,
+      };
+      setProject((prev) => ({
+        ...prev,
+        modules: prev.modules.map((m) =>
+          m.id === moduleId ? { ...m, dailyLog: [...(m.dailyLog ?? []), entry] } : m
+        ),
+      }));
+    },
+    []
+  );
+
+  const updateLogEntry = useCallback(
+    (moduleId: string, entryId: string, updates: Partial<Pick<DailyLogEntry, 'text' | 'date'>>) => {
+      setProject((prev) => ({
+        ...prev,
+        modules: prev.modules.map((m) =>
+          m.id === moduleId
+            ? {
+                ...m,
+                dailyLog: (m.dailyLog ?? []).map((e) =>
+                  e.id === entryId ? { ...e, ...updates } : e
+                ),
+              }
+            : m
+        ),
+      }));
+    },
+    []
+  );
+
+  const removeLogEntry = useCallback((moduleId: string, entryId: string) => {
+    setProject((prev) => ({
+      ...prev,
+      modules: prev.modules.map((m) =>
+        m.id === moduleId
+          ? { ...m, dailyLog: (m.dailyLog ?? []).filter((e) => e.id !== entryId) }
+          : m
+      ),
+    }));
+  }, []);
+
   const setProjectStartDate = useCallback((date: string) => {
     setProject((prev) => ({ ...prev, startDate: date }));
   }, []);
@@ -468,6 +521,9 @@ export function useProject() {
     removeDocument,
     addAttachment,
     removeAttachment,
+    addLogEntry,
+    updateLogEntry,
+    removeLogEntry,
     reorderModules,
     updateIntegrationMap,
     resetProject,
