@@ -39,8 +39,8 @@ export const PRIORITY_COLORS: Record<Priority, string> = {
 export const OVERDUE_COLOR = '#D63031';
 
 export const DEVELOPER_COLORS = {
-  christian: '#1E3A8A',
-  qusai: '#881337',
+  christian: '#3B82F6',
+  qusai: '#F43F5E',
 } as const;
 
 export const STORAGE_KEY = 'mission-control-project';

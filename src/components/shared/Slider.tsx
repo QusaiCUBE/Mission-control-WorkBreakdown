@@ -19,7 +19,7 @@ export default function Slider({
 }: SliderProps) {
   const clamped = Math.max(min, Math.min(max, value));
   const pct = ((clamped - min) / (max - min)) * 100;
-  const bg = `linear-gradient(to right, #1E3A8A 0%, #1E3A8A ${pct}%, #2D3348 ${pct}%, #2D3348 100%)`;
+  const bg = `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${pct}%, #2D3348 ${pct}%, #2D3348 100%)`;
 
   return (
     <div className="flex items-center gap-3 w-full">

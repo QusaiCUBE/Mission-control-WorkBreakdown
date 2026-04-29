@@ -103,10 +103,10 @@ function normalizeProject(project: Project): Project {
   }
 
   // Migration: refresh developer colors to the current palette by id
-  // (christian → navy, qusai → burgundy). Names left untouched so renames stick.
+  // (christian → blue-500, qusai → rose-500). Names left untouched so renames stick.
   const DEV_COLORS: Record<string, string> = {
-    'dev-christian': '#1E3A8A',
-    'dev-qusai': '#881337',
+    'dev-christian': '#3B82F6',
+    'dev-qusai': '#F43F5E',
   };
   const newDevelopers = project.developers.map((d) =>
     DEV_COLORS[d.id] && d.color !== DEV_COLORS[d.id]
