@@ -1,7 +1,7 @@
 import { useRef, useCallback, useState } from 'react';
 import { Module, Developer, Phase } from '../../types';
 import { daysBetween, addDays, getToday } from '../../utils/dates';
-import { getModuleProgress } from '../../utils/progress';
+import { getModuleOverallProgress } from '../../utils/progress';
 
 interface GanttChartProps {
   modules: Module[];
@@ -248,7 +248,7 @@ export default function GanttChart({
         const barDays = daysBetween(effectiveStart, effectiveEnd) + 1;
         const w = Math.max(barDays * dayWidth, dayWidth);
         const y = HEADER_HEIGHT + i * ROW_HEIGHT + BAR_Y_OFFSET;
-        const progress = getModuleProgress(module);
+        const progress = getModuleOverallProgress(module);
         const progressW = (progress / 100) * w;
 
         return (

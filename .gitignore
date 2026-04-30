@@ -2,3 +2,13 @@ node_modules
 dist
 .DS_Store
 *.local
+
+# Local-only / sensitive — keep on disk but never push
+.env
+.env.*
+*.pem
+*.key
+credentials*
+secret*
+CLAUDE.md
+erp_integration_map_reference.html
