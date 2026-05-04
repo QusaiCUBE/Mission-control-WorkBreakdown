@@ -1,10 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Project, Module, Phase, ModuleStatus, RequiredDocument, Attachment, DailyLogEntry } from '../types';
+import { Project, Module, Phase, ModuleStatus, DailyLogEntry } from '../types';
 import { createInitialProject, recreateProject } from '../data/initialData';
 import { saveProject, loadProject, clearProject, exportProject, importProject } from '../utils/storage';
 import { getToday } from '../utils/dates';
 import { generateId } from '../utils/id';
 import { saveProjectToFirebase, onProjectChange, subscribeAuthState } from '../utils/firebase';
+
+// Fields that earlier versions of the app stored on each module but no longer
+// uses. Stripped on load so they don't keep round-tripping through Firebase.
+const LEGACY_MODULE_FIELDS = ['tasks', 'documents', 'attachments', 'notes'] as const;
+
+function stripLegacyFields(m: Module): { module: Module; changed: boolean } {
+  let changed = false;
+  const copy = { ...m } as Module & Record<string, unknown>;
+  for (const f of LEGACY_MODULE_FIELDS) {
+    if (f in copy) {
+      delete copy[f];
+      changed = true;
+    }
+  }
+  return { module: copy as Module, changed };
+}
 
 function normalizeProject(project: Project): Project {
   const today = getToday();
@@ -17,25 +33,19 @@ function normalizeProject(project: Project): Project {
   if (offsiteIdx !== -1 && procoreIdx !== -1) {
     const offsite = modules[offsiteIdx];
     const procore = modules[procoreIdx];
-    // Keep the more-progressed module's status, merge tasks from offsite
     const merged: Module = {
       ...offsite,
       name: 'Offsite & Procore',
       description: 'Modular construction management + field operations (RFIs, submittals, daily logs)',
       prefix: 'offsite-procore',
-      // Keep whichever assignment exists
       assignedTo: offsite.assignedTo || procore.assignedTo,
-      // Keep whichever status is further along
       status: (['done', 'in_review', 'in_progress', 'backlog'] as const).find(
         (s) => offsite.status === s || procore.status === s
       ) || offsite.status,
-      notes: [offsite.notes, procore.notes].filter(Boolean).join('\n'),
       statusHistory: [...offsite.statusHistory, ...procore.statusHistory],
     };
-    // Remove both, insert merged at the offsite position
     modules = modules.filter((m) => m.prefix !== 'offsite' && m.prefix !== 'procore');
     modules.splice(offsiteIdx, 0, merged);
-    // Update shell dependencies: replace old IDs with merged ID
     modules = modules.map((m) => ({
       ...m,
       dependencies: m.dependencies
@@ -45,13 +55,14 @@ function normalizeProject(project: Project): Project {
     changed = true;
   }
 
-  // Migration: add documents, attachments, and dailyLog arrays to modules that don't have them
+  // Migration: ensure dailyLog array + onHold flag + strip legacy fields.
   modules = modules.map((m) => {
     let mod = m;
-    if (!mod.documents) { changed = true; mod = { ...mod, documents: [] }; }
-    if (!mod.attachments) { changed = true; mod = { ...mod, attachments: [] }; }
     if (!mod.dailyLog) { changed = true; mod = { ...mod, dailyLog: [] }; }
-    return mod;
+    if (typeof mod.onHold !== 'boolean') { changed = true; mod = { ...mod, onHold: false }; }
+    const stripped = stripLegacyFields(mod);
+    if (stripped.changed) changed = true;
+    return stripped.module;
   });
 
   // Migration: seed progress from status for modules missing the field
@@ -64,19 +75,16 @@ function normalizeProject(project: Project): Project {
     return m;
   });
 
-  // Fix done modules: completedDate = dueDate, and if completed after due, bump dueDate to match
+  // Done modules: completedDate = dueDate, and if completed after due, bump dueDate to match
   modules = modules.map((m) => {
     let mod = m;
-    // Clear stale status history
     if (mod.statusHistory.length > 0) {
       changed = true;
       mod = { ...mod, statusHistory: [] };
     }
     if (mod.status === 'done') {
-      // Set completedDate to today if not set, and ensure dueDate >= completedDate
       const completedDate = mod.completedDate || today;
       const dueDate = mod.dueDate || completedDate;
-      // If completed after due, the due date was wrong — set due = completed (on time)
       const fixedDueDate = dueDate < completedDate ? completedDate : dueDate;
       if (mod.completedDate !== completedDate || mod.dueDate !== fixedDueDate) {
         changed = true;
@@ -160,9 +168,6 @@ export function useProject() {
   // Save locally always, but only push to Firebase AFTER first read
   useEffect(() => {
     saveProject(project);
-    // Don't push to Firebase if:
-    // - This is a remote update echoing back
-    // - Firebase hasn't done its initial read yet
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
@@ -190,10 +195,7 @@ export function useProject() {
           completedDate: null,
           priority: 'medium' as const,
           progress: 0,
-          tasks: [],
-          documents: [],
-          attachments: [],
-          notes: '',
+          onHold: false,
           statusHistory: [],
           dependencies: [],
           dailyLog: [],
@@ -264,7 +266,6 @@ export function useProject() {
           status: newStatus,
           progress: nextProgress,
           completedDate: movingToDone ? (m.dueDate || today) : movingFromDone ? null : m.completedDate,
-          tasks: m.tasks,
           statusHistory: [
             ...m.statusHistory,
             { from: m.status, to: newStatus, date: today, by: 'user' },
@@ -289,86 +290,10 @@ export function useProject() {
     }));
   }, []);
 
-  const assignTask = useCallback((moduleId: string, taskId: string, devId: string | null) => {
+  const setModuleOnHold = useCallback((moduleId: string, onHold: boolean) => {
     setProject((prev) => ({
       ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId
-          ? {
-              ...m,
-              tasks: m.tasks.map((t) => (t.id === taskId ? { ...t, assignedTo: devId } : t)),
-            }
-          : m
-      ),
-    }));
-  }, []);
-
-  const toggleTask = useCallback((moduleId: string, taskId: string) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId
-          ? {
-              ...m,
-              tasks: m.tasks.map((t) =>
-                t.id === taskId
-                  ? {
-                      ...t,
-                      completed: !t.completed,
-                      completedDate: !t.completed ? getToday() : null,
-                    }
-                  : t
-              ),
-            }
-          : m
-      ),
-    }));
-  }, []);
-
-  const addDocument = useCallback((moduleId: string, doc: RequiredDocument) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId ? { ...m, documents: [...m.documents, doc] } : m
-      ),
-    }));
-  }, []);
-
-  const updateDocument = useCallback((moduleId: string, docId: string, updates: Partial<RequiredDocument>) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId
-          ? { ...m, documents: m.documents.map((d) => (d.id === docId ? { ...d, ...updates } : d)) }
-          : m
-      ),
-    }));
-  }, []);
-
-  const removeDocument = useCallback((moduleId: string, docId: string) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId ? { ...m, documents: m.documents.filter((d) => d.id !== docId) } : m
-      ),
-    }));
-  }, []);
-
-  const addAttachment = useCallback((moduleId: string, attachment: Attachment) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId ? { ...m, attachments: [...m.attachments, attachment] } : m
-      ),
-    }));
-  }, []);
-
-  const removeAttachment = useCallback((moduleId: string, attachmentId: string) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId ? { ...m, attachments: m.attachments.filter((a) => a.id !== attachmentId) } : m
-      ),
+      modules: prev.modules.map((m) => (m.id === moduleId ? { ...m, onHold } : m)),
     }));
   }, []);
 
@@ -423,23 +348,12 @@ export function useProject() {
     }));
   }, []);
 
-  const setProjectStartDate = useCallback((date: string) => {
-    setProject((prev) => ({ ...prev, startDate: date }));
-  }, []);
-
   const updateDeveloperName = useCallback((devId: string, name: string) => {
     setProject((prev) => ({
       ...prev,
       developers: prev.developers.map((d) =>
         d.id === devId ? { ...d, name } : d
       ) as [typeof prev.developers[0], typeof prev.developers[1]],
-    }));
-  }, []);
-
-  const updateModuleNotes = useCallback((moduleId: string, notes: string) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) => (m.id === moduleId ? { ...m, notes } : m)),
     }));
   }, []);
 
@@ -454,15 +368,6 @@ export function useProject() {
     },
     []
   );
-
-  const updateCompletedDate = useCallback((moduleId: string, completedDate: string | null) => {
-    setProject((prev) => ({
-      ...prev,
-      modules: prev.modules.map((m) =>
-        m.id === moduleId ? { ...m, completedDate } : m
-      ),
-    }));
-  }, []);
 
   const updateModulePriority = useCallback(
     (moduleId: string, priority: Module['priority']) => {
@@ -479,7 +384,6 @@ export function useProject() {
   const updateStartDate = useCallback((date: string) => {
     setProject((prev) => {
       const newProject = recreateProject(date);
-      // Preserve developer names
       newProject.developers = prev.developers;
       return newProject;
     });
@@ -527,13 +431,9 @@ export function useProject() {
     updateModule,
     moveModule,
     assignModule,
-    assignTask,
-    toggleTask,
-    setProjectStartDate,
+    setModuleOnHold,
     updateDeveloperName,
-    updateModuleNotes,
     updateModuleDates,
-    updateCompletedDate,
     updateModulePriority,
     updateModuleProgress,
     updateStartDate,
@@ -542,11 +442,6 @@ export function useProject() {
     updatePhase,
     addPhase,
     removePhase,
-    addDocument,
-    updateDocument,
-    removeDocument,
-    addAttachment,
-    removeAttachment,
     addLogEntry,
     updateLogEntry,
     removeLogEntry,

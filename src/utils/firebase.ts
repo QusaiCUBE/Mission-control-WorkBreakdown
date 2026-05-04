@@ -73,10 +73,6 @@ const authReady: Promise<void> = new Promise((resolve) => {
   });
 });
 
-export function getCurrentUser(): User | null {
-  return currentUser;
-}
-
 export function subscribeAuthState(cb: (u: User | null) => void): () => void {
   cb(currentUser);
   authListeners.add(cb);
@@ -193,14 +189,12 @@ export function onProjectChange(callback: (project: Project | null) => void): ()
             ];
           }
           for (const m of fixed.modules) {
-            if (!Array.isArray(m.tasks)) m.tasks = [];
-            if (!Array.isArray(m.documents)) m.documents = [];
-            if (!Array.isArray(m.attachments)) m.attachments = [];
             if (!Array.isArray(m.statusHistory)) m.statusHistory = [];
             if (!Array.isArray(m.dependencies)) m.dependencies = [];
-            if (typeof (m as any).progress !== 'number') {
+            if (!Array.isArray(m.dailyLog)) m.dailyLog = [];
+            if (typeof (m as { progress?: unknown }).progress !== 'number') {
               const seed = { backlog: 0, in_progress: 33, in_review: 66, done: 100 } as const;
-              (m as any).progress = seed[m.status as keyof typeof seed] ?? 0;
+              (m as { progress: number }).progress = seed[m.status as keyof typeof seed] ?? 0;
             }
           }
           // Drop legacy integrationMap field if present

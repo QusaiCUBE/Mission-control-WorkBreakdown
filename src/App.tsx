@@ -152,6 +152,7 @@ export default function App() {
             onAssignModule={perms.canAssign ? projectHook.assignModule : noopAny}
             onUpdatePriority={perms.canEditModules ? projectHook.updateModulePriority : noopAny}
             onUpdateProgress={perms.canEditModules ? projectHook.updateModuleProgress : noopAny}
+            onSetOnHold={perms.canEditModules ? projectHook.setModuleOnHold : noopAny}
             onAddLogEntry={
               perms.canEditNotes
                 ? (moduleId, date, text) => projectHook.addLogEntry(moduleId, date, text, username)

@@ -36,10 +36,9 @@ export function importProject(json: string): Project {
   }
   // Ensure modules have required arrays
   for (const m of data.modules) {
-    if (!Array.isArray(m.tasks)) m.tasks = [];
     if (!Array.isArray(m.dependencies)) m.dependencies = [];
     if (!Array.isArray(m.statusHistory)) m.statusHistory = [];
-    if (!m.notes) m.notes = '';
+    if (!Array.isArray(m.dailyLog)) m.dailyLog = [];
   }
   return data as Project;
 }

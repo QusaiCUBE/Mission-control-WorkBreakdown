@@ -1,21 +1,8 @@
-import { Project, Module, Task, Phase } from '../types';
+import { Project, Module, Phase } from '../types';
 import { generateId } from '../utils/id';
 import { addDays, generatePhaseDates } from '../utils/dates';
-import { INTEGRATION_TASKS } from './tasks';
 import { MODULE_DEFINITIONS } from './modules';
 import { DEFAULT_PHASE_DURATIONS } from '../constants';
-
-function createTasks(): Task[] {
-  return INTEGRATION_TASKS.map((template) => ({
-    id: generateId(),
-    title: template.title,
-    description: template.description,
-    completed: false,
-    assignedTo: null,
-    completedDate: null,
-    order: template.order,
-  }));
-}
 
 function createPhases(startDate: string, durations: number[] = DEFAULT_PHASE_DURATIONS): Phase[] {
   const dates = generatePhaseDates(startDate, durations);
@@ -65,10 +52,7 @@ function createModules(phases: Phase[]): Module[] {
       completedDate: null,
       priority: 'medium',
       progress: 0,
-      tasks: createTasks(),
-      documents: [],
-      attachments: [],
-      notes: '',
+      onHold: false,
       statusHistory: [],
       dependencies: [],
       dailyLog: [],
@@ -92,10 +76,7 @@ function createModules(phases: Phase[]): Module[] {
     completedDate: null,
     priority: 'high',
     progress: 0,
-    tasks: createTasks(),
-    documents: [],
-    attachments: [],
-    notes: '',
+    onHold: false,
     statusHistory: [],
     dependencies: phase1ModuleIds,
     dailyLog: [],

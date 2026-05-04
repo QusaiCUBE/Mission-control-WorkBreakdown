@@ -34,10 +34,6 @@ export function getToday(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function getWeekNumber(date: string, startDate: string): number {
-  return Math.floor(daysBetween(startDate, date) / 7) + 1;
-}
-
 export function generatePhaseDates(
   startDate: string,
   durations: number[]

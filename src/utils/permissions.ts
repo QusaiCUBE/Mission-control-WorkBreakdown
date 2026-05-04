@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'regular' | 'viewer';
+type Role = 'admin' | 'regular' | 'viewer';
 
 export interface Permissions {
   canMoveModules: boolean;
@@ -9,8 +9,6 @@ export interface Permissions {
   canEditPhases: boolean;
   canAddPhases: boolean;
   canEditDates: boolean;
-  canEditDocuments: boolean;
-  canAttachFiles: boolean;
   canEditNotes: boolean;
   canAccessSettings: boolean;
   canImportExport: boolean;
@@ -27,8 +25,6 @@ const ROLE_PERMISSIONS: Record<Role, Permissions> = {
     canEditPhases: true,
     canAddPhases: true,
     canEditDates: true,
-    canEditDocuments: true,
-    canAttachFiles: true,
     canEditNotes: true,
     canAccessSettings: true,
     canImportExport: true,
@@ -43,8 +39,6 @@ const ROLE_PERMISSIONS: Record<Role, Permissions> = {
     canEditPhases: false,
     canAddPhases: false,
     canEditDates: true,
-    canEditDocuments: true,
-    canAttachFiles: true,
     canEditNotes: true,
     canAccessSettings: false,
     canImportExport: false,
@@ -59,8 +53,6 @@ const ROLE_PERMISSIONS: Record<Role, Permissions> = {
     canEditPhases: false,
     canAddPhases: false,
     canEditDates: false,
-    canEditDocuments: false,
-    canAttachFiles: false,
     canEditNotes: false,
     canAccessSettings: false,
     canImportExport: false,
@@ -74,7 +66,7 @@ const USER_ROLES: Record<string, Role> = {
   justin: 'viewer',
 };
 
-export function getUserRole(username: string): Role {
+function getUserRole(username: string): Role {
   return USER_ROLES[username] || 'viewer';
 }
 

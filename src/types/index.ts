@@ -16,35 +16,6 @@ export interface Phase {
   description: string;
 }
 
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  completed: boolean;
-  assignedTo: string | null;
-  completedDate: string | null;
-  order: number;
-}
-
-export type DocumentStatus = 'needed' | 'requested' | 'received';
-
-export interface RequiredDocument {
-  id: string;
-  title: string;
-  source: string;
-  status: DocumentStatus;
-  notes: string;
-}
-
-export interface Attachment {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  data: string; // base64 data URL
-  addedDate: string;
-}
-
 export interface StatusChange {
   from: string;
   to: string;
@@ -73,10 +44,7 @@ export interface Module {
   completedDate: string | null;
   priority: Priority;
   progress: number;
-  tasks: Task[];
-  documents: RequiredDocument[];
-  attachments: Attachment[];
-  notes: string;
+  onHold: boolean;
   statusHistory: StatusChange[];
   dependencies: string[];
   dailyLog: DailyLogEntry[];

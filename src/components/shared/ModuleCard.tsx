@@ -5,6 +5,7 @@ import PriorityBadge from './PriorityBadge';
 import DeveloperAvatar from './DeveloperAvatar';
 import { getModuleProgress } from '../../utils/progress';
 import { formatDate, isOverdue } from '../../utils/dates';
+import { STATUS_COLORS } from '../../constants';
 
 interface ModuleCardProps {
   module: Module;
@@ -38,7 +39,7 @@ export default function ModuleCard({
       onDragStart={onDragStart}
       className={`group relative bg-bg-secondary border border-border-primary rounded-lg p-3 cursor-pointer hover:border-gray-500 transition-all duration-200 ${
         isDragging ? 'opacity-50 scale-95' : ''
-      }`}
+      } ${module.onHold ? 'opacity-60' : ''}`}
       style={{
         borderLeftWidth: '3px',
         borderLeftColor: leftColor,
@@ -71,7 +72,9 @@ export default function ModuleCard({
 
       <p className="text-xs text-gray-500 mb-3 line-clamp-1">{module.description}</p>
 
-      {module.status !== 'done' && <ProgressBar value={progress} size="sm" />}
+      {module.status !== 'done' && (
+        <ProgressBar value={progress} size="sm" color={STATUS_COLORS[module.status]} />
+      )}
 
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2">
@@ -90,6 +93,15 @@ export default function ModuleCard({
               Due {formatDate(module.dueDate)}
             </span>
           ) : null}
+          {module.onHold && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+              On Hold
+            </span>
+          )}
           <StatusBadge status={module.status} isOverdue={overdue} />
         </div>
       </div>

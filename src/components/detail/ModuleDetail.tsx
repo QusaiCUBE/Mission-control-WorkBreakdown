@@ -14,6 +14,7 @@ interface ModuleDetailProps {
   onAssignModule: (moduleId: string, devId: string | null) => void;
   onUpdatePriority: (moduleId: string, priority: Priority) => void;
   onUpdateProgress: (moduleId: string, progress: number) => void;
+  onSetOnHold: (moduleId: string, onHold: boolean) => void;
   onAddLogEntry: (moduleId: string, date: string, text: string) => void;
   onUpdateLogEntry: (
     moduleId: string,
@@ -32,6 +33,7 @@ export default function ModuleDetail({
   onAssignModule,
   onUpdatePriority,
   onUpdateProgress,
+  onSetOnHold,
   onAddLogEntry,
   onUpdateLogEntry,
   onRemoveLogEntry,
@@ -78,8 +80,45 @@ export default function ModuleDetail({
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <StatusBadge status={module.status} isOverdue={overdue} />
+          {module.onHold && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="w-2.5 h-2.5">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+              On Hold
+            </span>
+          )}
+          {!readOnly && module.status !== 'done' && (
+            <button
+              type="button"
+              onClick={() => onSetOnHold(module.id, !module.onHold)}
+              className={`ml-auto inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded transition-colors ${
+                module.onHold
+                  ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-bg-tertiary'
+              }`}
+            >
+              {module.onHold ? (
+                <>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                    <polygon points="6 4 20 12 6 20" />
+                  </svg>
+                  Resume
+                </>
+              ) : (
+                <>
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                    <rect x="6" y="5" width="4" height="14" rx="1" />
+                    <rect x="14" y="5" width="4" height="14" rx="1" />
+                  </svg>
+                  Put on Hold
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -93,9 +132,14 @@ export default function ModuleDetail({
             <Slider
               value={module.progress ?? 0}
               onChange={(v) => onUpdateProgress(module.id, v)}
-              disabled={readOnly}
+              disabled={readOnly || module.onHold}
               ariaLabel={`Progress for ${module.name}`}
             />
+            {module.onHold && (
+              <p className="text-[10px] text-amber-400 mt-1">
+                This module is on hold. Resume it to keep editing progress.
+              </p>
+            )}
           </div>
         )}
 
