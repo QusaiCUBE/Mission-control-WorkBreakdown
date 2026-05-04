@@ -1,7 +1,7 @@
 import { Module, Developer } from '../../types';
 import { STATUS_COLORS, STATUS_LABELS } from '../../constants';
 import ProgressBar from '../shared/ProgressBar';
-import { getModuleOverallProgress } from '../../utils/progress';
+import { getModuleProgress, getModuleOverallProgress } from '../../utils/progress';
 import { isOverdue, formatDate } from '../../utils/dates';
 
 interface ModuleStatusGridProps {
@@ -21,7 +21,7 @@ export default function ModuleStatusGrid({ modules, developers, onModuleClick }:
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 flex-1 content-start">
         {sortedModules.map((module, idx) => {
-          const progress = getModuleOverallProgress(module);
+          const progress = getModuleProgress(module);
           const overdue = isOverdue(module.dueDate) && module.status !== 'done';
           const statusColor = overdue ? '#D63031' : STATUS_COLORS[module.status];
           const isBoth = module.assignedTo === 'both';

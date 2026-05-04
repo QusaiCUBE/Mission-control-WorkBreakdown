@@ -3,7 +3,7 @@ import ProgressBar from './ProgressBar';
 import StatusBadge from './StatusBadge';
 import PriorityBadge from './PriorityBadge';
 import DeveloperAvatar from './DeveloperAvatar';
-import { getModuleOverallProgress } from '../../utils/progress';
+import { getModuleProgress } from '../../utils/progress';
 import { formatDate, isOverdue } from '../../utils/dates';
 
 interface ModuleCardProps {
@@ -27,7 +27,7 @@ export default function ModuleCard({
 }: ModuleCardProps) {
   const isBoth = module.assignedTo === 'both';
   const assignedDev = isBoth ? null : developers.find((d) => d.id === module.assignedTo);
-  const progress = getModuleOverallProgress(module);
+  const progress = getModuleProgress(module);
   const overdue = isOverdue(module.dueDate) && module.status !== 'done';
   const leftColor = isBoth ? '#8B5CF6' : (assignedDev?.color || '#6B7280');
 

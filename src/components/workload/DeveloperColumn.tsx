@@ -2,7 +2,7 @@ import { Module, Developer, Priority } from '../../types';
 import ProgressBar from '../shared/ProgressBar';
 import StatusBadge from '../shared/StatusBadge';
 import PriorityBadge from '../shared/PriorityBadge';
-import { getModuleOverallProgress } from '../../utils/progress';
+import { getModuleProgress } from '../../utils/progress';
 import { isOverdue } from '../../utils/dates';
 
 interface DeveloperColumnProps {
@@ -55,7 +55,7 @@ export default function DeveloperColumn({ developer, modules, onModuleClick }: D
           </div>
         ) : (
           sortedModules.map((module) => {
-            const progress = getModuleOverallProgress(module);
+            const progress = getModuleProgress(module);
             const overdue = isOverdue(module.dueDate) && module.status !== 'done';
 
             return (
