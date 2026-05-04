@@ -14,6 +14,7 @@ interface KanbanColumnProps {
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onDrop: (e: React.DragEvent) => void;
+  onDeleteModule?: (moduleId: string) => void;
 }
 
 export default function KanbanColumn({
@@ -27,6 +28,7 @@ export default function KanbanColumn({
   onDragOver,
   onDragLeave,
   onDrop,
+  onDeleteModule,
 }: KanbanColumnProps) {
   const color = STATUS_COLORS[status];
 
@@ -57,6 +59,7 @@ export default function KanbanColumn({
               onClick={() => onModuleClick(module.id)}
               onDragStart={(e) => onDragStart(e, module.id)}
               onDragEnd={onDragEnd}
+              onDelete={onDeleteModule ? () => onDeleteModule(module.id) : undefined}
             />
           ))
         )}

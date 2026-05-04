@@ -7,9 +7,10 @@ interface KanbanCardProps {
   onClick: () => void;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: (e: React.DragEvent) => void;
+  onDelete?: () => void;
 }
 
-export default function KanbanCard({ module, developers, onClick, onDragStart, onDragEnd }: KanbanCardProps) {
+export default function KanbanCard({ module, developers, onClick, onDragStart, onDragEnd, onDelete }: KanbanCardProps) {
   return (
     <div onDragEnd={onDragEnd}>
       <ModuleCard
@@ -18,6 +19,7 @@ export default function KanbanCard({ module, developers, onClick, onDragStart, o
         onClick={onClick}
         draggable
         onDragStart={onDragStart}
+        onDelete={onDelete}
       />
     </div>
   );

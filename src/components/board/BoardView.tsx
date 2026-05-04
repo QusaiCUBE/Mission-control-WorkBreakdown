@@ -3,6 +3,7 @@ import { Module, Developer, ModuleStatus, Phase } from '../../types';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { getModuleProgress } from '../../utils/progress';
 import KanbanColumn from './KanbanColumn';
+import ConfirmDialog from '../shared/ConfirmDialog';
 
 interface BoardViewProps {
   modules: Module[];
@@ -11,12 +12,13 @@ interface BoardViewProps {
   onMoveModule: (moduleId: string, status: ModuleStatus) => void;
   onModuleClick: (moduleId: string) => void;
   onAddModule?: (name: string, description: string, phase: string) => void;
+  onDeleteModule?: (moduleId: string) => void;
   readOnly?: boolean;
 }
 
 const COLUMNS: ModuleStatus[] = ['backlog', 'in_progress', 'in_review', 'done'];
 
-export default function BoardView({ modules, developers, phases, onMoveModule, onModuleClick, onAddModule, readOnly }: BoardViewProps) {
+export default function BoardView({ modules, developers, phases, onMoveModule, onModuleClick, onAddModule, onDeleteModule, readOnly }: BoardViewProps) {
   const { dragOverColumn, handleDragStart, handleDragEnd, handleDragOver, handleDragLeave, handleDrop } =
     useDragAndDrop(onMoveModule);
 
@@ -24,6 +26,11 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPhase, setNewPhase] = useState(phases[0]?.id || '');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  const pendingDelete = pendingDeleteId
+    ? modules.find((m) => m.id === pendingDeleteId) ?? null
+    : null;
 
   const handleAdd = () => {
     if (!newName.trim()) return;
@@ -117,10 +124,28 @@ export default function BoardView({ modules, developers, phases, onMoveModule, o
               onDragOver={(e) => handleDragOver(e, status)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, status)}
+              onDeleteModule={onDeleteModule && !readOnly ? setPendingDeleteId : undefined}
             />
           );
         })}
       </div>
+
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title="Delete this module?"
+        message={
+          pendingDelete
+            ? `"${pendingDelete.name}" and all of its tasks, daily-log entries, and history will be permanently removed. This can't be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => {
+          if (pendingDelete && onDeleteModule) onDeleteModule(pendingDelete.id);
+          setPendingDeleteId(null);
+        }}
+      />
     </div>
   );
 }

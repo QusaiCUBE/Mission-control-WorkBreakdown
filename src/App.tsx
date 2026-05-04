@@ -90,6 +90,7 @@ export default function App() {
               onMoveModule={perms.canMoveModules ? projectHook.moveModule : noopAny}
               onModuleClick={viewState.openModuleDetail}
               onAddModule={perms.canCreateModules ? projectHook.addModule : undefined}
+              onDeleteModule={perms.canDeleteModules ? projectHook.removeModule : undefined}
               readOnly={!perms.canMoveModules}
             />
           )}

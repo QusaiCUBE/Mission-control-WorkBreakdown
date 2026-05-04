@@ -13,6 +13,7 @@ interface ModuleCardProps {
   draggable?: boolean;
   onDragStart?: (e: React.DragEvent) => void;
   isDragging?: boolean;
+  onDelete?: () => void;
 }
 
 export default function ModuleCard({
@@ -22,6 +23,7 @@ export default function ModuleCard({
   draggable,
   onDragStart,
   isDragging,
+  onDelete,
 }: ModuleCardProps) {
   const isBoth = module.assignedTo === 'both';
   const assignedDev = isBoth ? null : developers.find((d) => d.id === module.assignedTo);
@@ -34,7 +36,7 @@ export default function ModuleCard({
       onClick={onClick}
       draggable={draggable}
       onDragStart={onDragStart}
-      className={`bg-bg-secondary border border-border-primary rounded-lg p-3 cursor-pointer hover:border-gray-500 transition-all duration-200 ${
+      className={`group relative bg-bg-secondary border border-border-primary rounded-lg p-3 cursor-pointer hover:border-gray-500 transition-all duration-200 ${
         isDragging ? 'opacity-50 scale-95' : ''
       }`}
       style={{
@@ -42,9 +44,29 @@ export default function ModuleCard({
         borderLeftColor: leftColor,
       }}
     >
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="text-sm font-medium text-white leading-tight">{module.name}</h3>
-        <PriorityBadge priority={module.priority} />
+      <div className="flex items-start justify-between mb-2 gap-2">
+        <h3 className="text-sm font-medium text-white leading-tight flex-1 min-w-0">{module.name}</h3>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <PriorityBadge priority={module.priority} />
+          {onDelete && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
+              title="Delete module"
+              aria-label={`Delete ${module.name}`}
+              className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-status-overdue transition-opacity p-0.5 rounded"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-gray-500 mb-3 line-clamp-1">{module.description}</p>
